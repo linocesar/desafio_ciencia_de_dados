@@ -1,5 +1,3 @@
-from render import generator_multiple_choices_periodos
-
 periodos = {
     "Nov/2023": "spabr2311.dbf",
     "Out/2023": "spabr2310.dbf",
@@ -194,7 +192,11 @@ periodos = {
     "Jan/2008": "spabr0801.dbf"
 }
 
+colunas = {"Grupo Procedimento": "Grupo_procedimento",
+           "Subgrupo Procedimento": "Subgrupo_proced."
+           }
 
-def render_periodos():
-    itens = generator_multiple_choices_periodos("Períodos Disponíveis", periodos)
-    return itens
+conteudo = {
+    "Quantidade aprovada": "Quantidade_aprovada",
+    "Valor aprovado": "Valor_aprovado"
+}

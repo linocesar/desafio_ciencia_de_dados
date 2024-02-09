@@ -1,4 +1,4 @@
-from render import generator_multiple_choices
+from render import generator_multiple_choices_colunas
 
 colunas = {"Grupo Procedimento": "Grupo_procedimento",
            "Subgrupo Procedimento": "Subgrupo_proced."
@@ -6,4 +6,5 @@ colunas = {"Grupo Procedimento": "Grupo_procedimento",
 
 
 def render_coluna():
-    generator_multiple_choices("Coluna", colunas)
+    colunas_selecionadas = generator_multiple_choices_colunas("Coluna", itens=colunas)
+    return colunas_selecionadas

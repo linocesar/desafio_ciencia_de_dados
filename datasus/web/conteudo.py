@@ -1,4 +1,4 @@
-from render import generator_multiple_choices
+from render import generator_multiple_choices_conteudo
 
 conteudo = {
     "Quantidade aprovada": "Quantidade_aprovada",
@@ -7,4 +7,5 @@ conteudo = {
 
 
 def render_conteudo():
-    generator_multiple_choices("Conteúdo", conteudo)
+    itens = generator_multiple_choices_conteudo("Conteúdo", conteudo)
+    return itens
