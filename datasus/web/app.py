@@ -2,6 +2,7 @@ import streamlit as st
 import urllib.request as request
 import requests
 import os
+import concurrent.futures
 
 from bs4 import BeautifulSoup
 
@@ -12,6 +13,7 @@ from sidebar import render_sidebar
 import coluna as item_colunas
 import conteudo as item_conteudos
 import periodos as item_periodos
+from tqdm import tqdm
 
 
 st.title("DATASUS")
@@ -36,7 +38,7 @@ def page_data_loading():
     st.write("Carregamento de dados")
 
 
-def bot(my_payload, my_filename: str):
+def bot(my_payload, my_filename: str, conta_arquivo, total_arquivos):
     url = "http://tabnet.datasus.gov.br/cgi/tabcgi.exe?sih/cnv/spabr.def"
 
     headers = {
@@ -63,7 +65,8 @@ def bot(my_payload, my_filename: str):
     # Extrair o HREF e o texto da tag 'A'
     filename_tabnet = tag_a[1].get('href')
 
-    download_file(filename_tabnet, my_filename)
+    download_file(filename_tabnet, my_filename, conta_arquivo, total_arquivos)
+    #download_files_parallel(filename_tabnet, my_filename)
 
 
 def format_filename(my_coluna: str, my_conteudo: str, my_periodo: str) -> str:
@@ -71,7 +74,7 @@ def format_filename(my_coluna: str, my_conteudo: str, my_periodo: str) -> str:
     return my_filename
 
 
-def download_file(filename_tabnet: str, my_filename: str):
+def download_file(filename_tabnet: str, my_filename: str, conta_arquivo, total_arquivos):
     diretorio = "storage"
     if not os.path.exists(diretorio):
         os.mkdir(diretorio)
@@ -90,13 +93,20 @@ def download_file(filename_tabnet: str, my_filename: str):
     response = request.urlopen(response)
     content = response.read()
     # Write the response to a file
-    print(caminho_arquivo)
+    # print(caminho_arquivo)
     try:
         with open(caminho_arquivo, "wb") as f:
             f.write(content)
-        print(f"File {my_filename} downloaded successfully.")
+        print(f"Arquivo {conta_arquivo} de {total_arquivos}: {my_filename} downloaded successfully.")
     except IOError:
         print(f"Error writing file {my_filename}.")
+
+
+def download_files_parallel(urls, local_paths):
+    total_arquivos = range(len(urls))
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = [executor.submit(bot, url, local_path, conta_arquivo + 1, len(total_arquivos)) for url, local_path, conta_arquivo in zip(urls, local_paths, total_arquivos)]
+        concurrent.futures.wait(futures)
 
 
 def busca_chaves(itens: dict, valor_item: str) -> str:
@@ -116,29 +126,40 @@ def get_payload(my_coluna: str, my_conteudo: str, my_periodo: str):
     return saida_formatada
 
 
-opcao_selecionada = render_sidebar()
-
-if opcao_selecionada == "Extração de dados":
+def on_download_button_click(my_periodos, my_colunas, my_conteudos):
     payloads = []
     filenames = []
+    arquivos = 0
+
+    for coluna in my_colunas:
+        for conteudo in my_conteudos:
+            for periodo in my_periodos:
+                minha_coluna = busca_chaves(item_colunas.colunas, coluna)
+                meu_conteudo = busca_chaves(item_conteudos.conteudo, conteudo)
+                meu_periodo = busca_chaves(item_periodos.periodos, periodo)
+
+                filename = format_filename(minha_coluna, meu_conteudo, meu_periodo)
+                my_payload = get_payload(coluna, conteudo, periodo)
+                filenames.append(filename)
+                payloads.append(my_payload)
+                arquivos += 1
+
+    return payloads, filenames, arquivos
+
+
+opcao_selecionada = render_sidebar()
+
+
+if opcao_selecionada == "Extração de dados":
+
     periodos, colunas, conteudos = page_data_extraction()
-    if len(colunas) > 0 and len(conteudos) > 0 and len(periodos) > 0:
-        for coluna in colunas:
-            for conteudo in conteudos:
-                for periodo in periodos:
 
-                    minha_coluna = busca_chaves(item_colunas.colunas, coluna)
-                    meu_conteudo = busca_chaves(item_conteudos.conteudo, conteudo)
-                    meu_periodo = busca_chaves(item_periodos.periodos, periodo)
+    if st.button("Download", key=1):
+        if len(colunas) > 0 and len(conteudos) > 0 and len(periodos) > 0:
+            payloads, filenames, arquivos = on_download_button_click(periodos, colunas, conteudos)
+            st.write(f"Total de arquivos: {arquivos}")
+            download_files_parallel(payloads, filenames)
 
-                    filename = format_filename(minha_coluna, meu_conteudo, meu_periodo)
-                    my_payload = get_payload(coluna, conteudo, periodo)
-                    filenames.append(filename)
-                    payloads.append(my_payload)
-    for payload, file in zip(payloads, filenames):
-        st.write("Iniciando a captura dos dados...")
-        st.write(f"Arquivo: {file}")
-        bot(payload, file)
 elif opcao_selecionada == "Processamento de dados":
     page_data_processing()
 else:
