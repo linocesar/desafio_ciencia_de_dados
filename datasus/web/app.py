@@ -13,7 +13,6 @@ from sidebar import render_sidebar
 import coluna as item_colunas
 import conteudo as item_conteudos
 import periodos as item_periodos
-from tqdm import tqdm
 
 
 st.title("DATASUS")
@@ -55,7 +54,7 @@ def bot(my_payload, my_filename: str, conta_arquivo, total_arquivos):
         'User-Agent': 'Mozilla/5.0 X11; Linux x86_64 AppleWebKit/537.36 KHTML: like Gecko Chrome/120.0.0.0 Safari/537.36'
     }
 
-    response = requests.request("POST", url, headers=headers, data=my_payload)
+    response = requests.request("POST", url, headers=headers, data=my_payload, timeout=15)
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -90,10 +89,10 @@ def download_file(filename_tabnet: str, my_filename: str, conta_arquivo, total_a
     }
 
     response = request.Request(url=url, headers=headers)
-    response = request.urlopen(response)
+    response = request.urlopen(response, timeout=15)
     content = response.read()
+
     # Write the response to a file
-    # print(caminho_arquivo)
     try:
         with open(caminho_arquivo, "wb") as f:
             f.write(content)
@@ -104,7 +103,7 @@ def download_file(filename_tabnet: str, my_filename: str, conta_arquivo, total_a
 
 def download_files_parallel(urls, local_paths):
     total_arquivos = range(len(urls))
-    with concurrent.futures.ProcessPoolExecutor() as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=3) as executor:
         futures = [executor.submit(bot, url, local_path, conta_arquivo + 1, len(total_arquivos)) for url, local_path, conta_arquivo in zip(urls, local_paths, total_arquivos)]
         concurrent.futures.wait(futures)
 
