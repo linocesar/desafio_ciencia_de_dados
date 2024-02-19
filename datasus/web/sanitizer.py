@@ -13,14 +13,14 @@ def limpar_nome_colunas(nome):
 
 
 def get_mes_ano(arquivo: str) -> tuple:
-    mes: str = arquivo.rsplit('.tab')[0].split('_')[-2]
+    mes: str = arquivo.rsplit('.tab')[0].split('_')[-2].upper()
     ano: str = arquivo.rsplit('.tab')[0].split('_')[-1]
     return mes, ano
 
 
 
 # Diretório onde estão os arquivos .tab
-diretorio_saida = 'storage/teste'
+diretorio_saida = 'storage/output'
 diretorio = 'storage/'
 # Listar todos os arquivos .tab no diretório
 arquivos_tab = [arquivo for arquivo in os.listdir(diretorio) if arquivo.endswith('.tab')]
