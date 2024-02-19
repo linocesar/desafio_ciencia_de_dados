@@ -1,5 +1,12 @@
 # Projeto Desafio Ciência de Dados
 
+Este é um projeto Python para análise de dados utilizando as bibliotecas Streamlit e pandas.
+
+## Descrição do Projeto
+
+O Projeto DATASUS é um conjunto de ferramentas desenvolvidas em Python para extração e análise de dados do DATASUS. Inicialmente, o projeto consiste em um crawler que extrai dados do DATASUS e realiza tratamento inicial nos dados extraídos. Esses dados podem então ser explorados e analisados utilizando a aplicação desenvolvida com a biblioteca Streamlit.
+
+
 ## Instalação
 
 
