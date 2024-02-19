@@ -68,6 +68,9 @@ for arquivo in arquivos_tab:
     # Descartar as linhas que contenham 'IGNORADO' na coluna 'municipio'
     df = df[~df['municipio'].str.contains('IGNORADO')]
 
+    # Ignorar as duas últimas linhas
+    # df = df.iloc[:-2]
+
     # Salvar o DataFrame com o mesmo nome do arquivo original
     df.to_csv(os.path.join(diretorio_saida, arquivo), sep=';', index=False, encoding='utf-8')
 
