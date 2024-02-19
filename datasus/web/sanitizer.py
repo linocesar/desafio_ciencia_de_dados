@@ -28,7 +28,7 @@ total_arquivos = len(arquivos_tab)
 conta_arquivos = 0
 encoding = 'windows-1252' # ISO-8859-15
 # Iterar sobre cada arquivo .tab
-for arquivo in arquivos_tab[:3]:
+for arquivo in arquivos_tab:
     # Ler o arquivo .tab
     df = pd.read_csv(os.path.join(diretorio, arquivo), sep=';', encoding=encoding, skiprows=4)
 
