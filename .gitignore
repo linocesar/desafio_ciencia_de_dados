@@ -168,4 +168,5 @@ docs/
 bots-fastapi/app/png
 
 *.tab
-.idea/
+
+*.csv
