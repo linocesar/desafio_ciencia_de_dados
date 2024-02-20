@@ -103,7 +103,7 @@ def download_file(filename_tabnet: str, my_filename: str, conta_arquivo, total_a
 
 def download_files_parallel(urls, local_paths):
     total_arquivos = range(len(urls))
-    with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
         futures = [executor.submit(bot, url, local_path, conta_arquivo + 1, len(total_arquivos)) for url, local_path, conta_arquivo in zip(urls, local_paths, total_arquivos)]
         concurrent.futures.wait(futures)
 
