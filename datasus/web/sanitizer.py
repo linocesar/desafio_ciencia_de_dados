@@ -27,6 +27,7 @@ diretorio = 'storage/'
 arquivos_tab = [arquivo for arquivo in os.listdir(diretorio) if arquivo.endswith('.tab')]
 total_arquivos = len(arquivos_tab)
 conta_arquivos = 0
+arquivos_com_soma_errada = []
 encoding = 'windows-1252'  # ISO-8859-15
 # Iterar sobre cada arquivo .tab
 for arquivo in arquivos_tab:
@@ -84,9 +85,6 @@ for arquivo in arquivos_tab:
     # Somar os valores de todas as linhas e colunas com exceção de: 'municipio', 'mes', 'ano','cod_municipio', 'uf' e 'total'
     total_app = df.iloc[0:, 1:-5].sum().sum()
 
-    # Testando total encontrado no tabnet contra o total realizado pela aplicação
-    unittest.TestCase().assertEqual(total_tabnet, total_app, msg=f'Total encontrado no tabnet ({total_tabnet}) não é igual ao total realizado pela aplicação ({total_app})')
-
     #  Converter as colunas 'mes' e 'uf' para tipos categóricos.
     df['mes'] = df['mes'].astype('category')
     df['uf'] = df['uf'].astype('category')
@@ -102,4 +100,13 @@ for arquivo in arquivos_tab:
 
     print(f'Arquivo {conta_arquivos} de {total_arquivos}: alterações aplicadas ao arquivo {arquivo}')
     print(f'Total tabnet: {total_tabnet}')
-    print(f'Total app: {total_app}')
+    print(f'Total app: {round(total_app, 2)}')
+
+    # Testando total encontrado no tabnet contra o total realizado pela aplicação
+    if total_tabnet != round(total_app, 2):
+        result = f'{arquivo}: total encontrado no tabnet ({total_tabnet}) não é igual ao total realizado pela aplicação ({round(total_app, 2)})'
+        arquivos_com_soma_errada.append(result)
+print(f'Total de arquivos processados: {conta_arquivos}')
+if len(arquivos_com_soma_errada) > 0:
+    print(f'Total de arquivos com soma errada: {len(arquivos_com_soma_errada)}')
+    print(arquivos_com_soma_errada)
