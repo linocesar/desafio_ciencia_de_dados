@@ -202,7 +202,7 @@ if __name__ == '__main__':
                     log_area = st.empty()
                     log_data = ""
                     for payload, filename, idx in zip(payloads, filenames, total):
-                        log_data += run_bot(payload, filename, filenames.index(filename) + 1, total_arquivos) + "\n"
+                        log_data += run_bot(payload, filename, filenames.index(filename) + 1, total_arquivos) + "✅" + "\n"
                         idx += 1
                         progress = idx / len(total)
                         placeholder.text(f"{int(progress * 100)}%")
