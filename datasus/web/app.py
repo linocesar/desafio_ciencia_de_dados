@@ -4,7 +4,7 @@ import requests
 import os
 from concurrent.futures import ThreadPoolExecutor, wait
 from datetime import datetime
-
+from random import randint
 from bs4 import BeautifulSoup
 
 from periodos import render_periodos
@@ -14,7 +14,6 @@ from sidebar import render_sidebar
 import coluna as item_colunas
 import conteudo as item_conteudos
 import periodos as item_periodos
-
 
 st.set_page_config(layout="wide", page_title='DATASUS')
 st.title("DATASUS")
@@ -32,7 +31,35 @@ def page_data_extraction():
 
 
 def page_data_processing():
+    if "file_uploader" not in st.session_state:
+        st.session_state["file_uploader"] = 0
+
+    if "uploaded_files" not in st.session_state:
+        st.session_state["uploaded_files"] = []
+
     st.write("Processamento de dados")
+    files_path = os.getcwd() + "/storage/"
+    file_list = [file for file in os.listdir(files_path) if
+                 os.path.isfile(os.path.join(files_path, file)) and file.endswith(".tab")]
+    st.info(f"{len(file_list)} arquivos .tab presentes no diretório {files_path}")
+
+    files = st.file_uploader("Selecione o arquivo .tab", type=['tab'], accept_multiple_files=True,
+                             key=st.session_state["file_uploader"], )
+
+    if files:
+        st.session_state["uploaded_files"] = files
+
+    if st.button("Limpar arquivos"):
+        st.session_state["file_uploader"] += 1
+        st.rerun()
+
+    st.write("Número de arquivos selecionados: ", len(files))
+
+
+def uploader_callback():
+    if st.session_state['file_uploader'] is not None:
+        st.session_state['ctr'] += 1
+        print('Uploaded file #%d' % st.session_state['ctr'])
 
 
 def page_data_loading():
@@ -90,24 +117,28 @@ def download_file(filename_tabnet: str, my_filename: str, conta_arquivo: int, to
         'Connection': 'keep-alive',
         # 'Cookie': 'TS014879da=01e046ca4ce6c7798b4ea0cc135f51846c393958a053b1e1ede05d76e32700406eb7c5c8f7fada65ddaf62cd3d2933fbe9ce45558d'
     }
-
-    response = request.Request(url=url, headers=headers)
-    response = request.urlopen(response, timeout=15)
-    content = response.read()
+    try:
+        time = 15
+        response = request.Request(url=url, headers=headers)
+        response = request.urlopen(response, timeout=time)
+        content = response.read()
+    except Exception as e:
+        return f"{datetime.now().strftime('%d-%m-%Y %H:%M:%S')} - INFO - Arquivo {conta_arquivo} de {total_arquivos}: {my_filename} não foi possível baixar. ❌"
 
     # Write the response to a file
     try:
         with open(caminho_arquivo, "wb") as f:
             f.write(content)
-        return f"{datetime.now().strftime('%d-%m-%Y %H:%M:%S')} - INFO - Arquivo {conta_arquivo} de {total_arquivos}: {my_filename} baixado com sucesso."
+        return f"{datetime.now().strftime('%d-%m-%Y %H:%M:%S')} - INFO - Arquivo {conta_arquivo} de {total_arquivos}: {my_filename} baixado com sucesso. ✅"
     except IOError:
-        return f"Error writing file {my_filename}."
+        return f"{datetime.now().strftime('%d-%m-%Y %H:%M:%S')} - INFO - Arquivo {conta_arquivo} de {total_arquivos}: {my_filename} não foi possível salvar. ❌"
 
 
 def download_files_parallel(urls: list, local_paths: list):
     arquivos = range(len(urls))
     with ThreadPoolExecutor(max_workers=4) as executor:
-        tasks = {executor.submit(bot, url, local_path, conta_arquivo + 1, len(arquivos)) for url, local_path, conta_arquivo in zip(urls, local_paths, arquivos)}
+        tasks = {executor.submit(bot, url, local_path, conta_arquivo + 1, len(arquivos)) for
+                 url, local_path, conta_arquivo in zip(urls, local_paths, arquivos)}
         concluido, nao_concluido = wait(tasks, timeout=3)
     return concluido, nao_concluido
 
@@ -166,20 +197,23 @@ def run_bot(my_payload, my_filename, conta_arquivo, numero_arquivos):
         'Upgrade-Insecure-Requests': '1',
         'User-Agent': 'Mozilla/5.0 X11; Linux x86_64 AppleWebKit/537.36 KHTML: like Gecko Chrome/120.0.0.0 Safari/537.36'
     }
+    try:
+        time = 15
+        response = requests.request("POST", url, headers=headers, data=my_payload, timeout=time)
 
-    response = requests.request("POST", url, headers=headers, data=my_payload, timeout=15)
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-    soup = BeautifulSoup(response.text, 'html.parser')
+        # Encontrar a tag 'A' dentro da tag 'td'
+        tag_a = soup.find('td', class_='botao_opcao').findAll('a')
 
-    # Encontrar a tag 'A' dentro da tag 'td'
-    tag_a = soup.find('td', class_='botao_opcao').findAll('a')
+        # Extrair o HREF e o texto da tag 'A'
+        filename_tabnet = tag_a[1].get('href')
 
-    # Extrair o HREF e o texto da tag 'A'
-    filename_tabnet = tag_a[1].get('href')
+        result = download_file(filename_tabnet, my_filename, conta_arquivo, numero_arquivos)
 
-    result = download_file(filename_tabnet, my_filename, conta_arquivo, numero_arquivos)
-
-    return result
+        return result
+    except Exception as e:
+        return f"{datetime.now().strftime('%d-%m-%Y %H:%M:%S')} - INFO - Arquivo {conta_arquivo} de {total_arquivos}: {my_filename} não foi possível baixar. ❌"
 
 
 if __name__ == '__main__':
@@ -202,7 +236,8 @@ if __name__ == '__main__':
                     log_area = st.empty()
                     log_data = ""
                     for payload, filename, idx in zip(payloads, filenames, total):
-                        log_data += run_bot(payload, filename, filenames.index(filename) + 1, total_arquivos) + "✅" + "\n"
+                        log_data += run_bot(payload, filename, filenames.index(filename) + 1,
+                                            total_arquivos) + "\n"
                         idx += 1
                         progress = idx / len(total)
                         placeholder.text(f"{int(progress * 100)}%")
