@@ -13,7 +13,7 @@ from sidebar import render_sidebar
 import coluna as item_colunas
 import conteudo as item_conteudos
 import periodos as item_periodos
-git
+
 st.set_page_config(layout="wide", page_title='DATASUS')
 st.title("DATASUS")
 st.write("DADOS DETALHADOS DAS AIH - POR LOCAL INTERNAÇÃO - BRASIL")
