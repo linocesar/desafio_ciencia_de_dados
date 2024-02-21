@@ -2,7 +2,6 @@ import pandas as pd
 import os
 import re
 import unicodedata
-import unittest
 
 
 def limpar_nome_colunas(nome):
@@ -110,3 +109,5 @@ print(f'Total de arquivos processados: {conta_arquivos}')
 if len(arquivos_com_soma_errada) > 0:
     print(f'Total de arquivos com soma errada: {len(arquivos_com_soma_errada)}')
     print(arquivos_com_soma_errada)
+else:
+    print('Todos os arquivos foram processados com sucesso!')
