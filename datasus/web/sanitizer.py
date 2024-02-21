@@ -91,7 +91,7 @@ for arquivo in arquivos_tab:
     df['mes'] = df['mes'].astype('category')
     df['uf'] = df['uf'].astype('category')
 
-    #  Renomear o arquivo .tab para .csv.
+    # Trocar o formato do arquivo .tab para .csv.
     arquivo = arquivo.replace('.tab', '.csv')
 
     # Salvar o DataFrame com o mesmo nome do arquivo original
