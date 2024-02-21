@@ -2,7 +2,8 @@ import streamlit as st
 import urllib.request as request
 import requests
 import os
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor, wait
+from datetime import datetime
 
 from bs4 import BeautifulSoup
 
@@ -15,6 +16,7 @@ import conteudo as item_conteudos
 import periodos as item_periodos
 
 
+st.set_page_config(layout="wide", page_title='DATASUS')
 st.title("DATASUS")
 st.write("DADOS DETALHADOS DAS AIH - POR LOCAL INTERNAÇÃO - BRASIL")
 
@@ -37,7 +39,7 @@ def page_data_loading():
     st.write("Carregamento de dados")
 
 
-def bot(my_payload, my_filename: str, conta_arquivo, total_arquivos):
+def bot(my_payload: str, my_filename: str, conta_arquivo: int, total_arquivos: int):
     url = "http://tabnet.datasus.gov.br/cgi/tabcgi.exe?sih/cnv/spabr.def"
 
     headers = {
@@ -64,8 +66,9 @@ def bot(my_payload, my_filename: str, conta_arquivo, total_arquivos):
     # Extrair o HREF e o texto da tag 'A'
     filename_tabnet = tag_a[1].get('href')
 
-    download_file(filename_tabnet, my_filename, conta_arquivo, total_arquivos)
-    #download_files_parallel(filename_tabnet, my_filename)
+    result = download_file(filename_tabnet, my_filename, conta_arquivo, total_arquivos)
+
+    print(result)
 
 
 def format_filename(my_coluna: str, my_conteudo: str, my_periodo: str) -> str:
@@ -73,7 +76,7 @@ def format_filename(my_coluna: str, my_conteudo: str, my_periodo: str) -> str:
     return my_filename
 
 
-def download_file(filename_tabnet: str, my_filename: str, conta_arquivo, total_arquivos):
+def download_file(filename_tabnet: str, my_filename: str, conta_arquivo: int, total_arquivos: int):
     diretorio = "storage"
     if not os.path.exists(diretorio):
         os.mkdir(diretorio)
@@ -96,16 +99,17 @@ def download_file(filename_tabnet: str, my_filename: str, conta_arquivo, total_a
     try:
         with open(caminho_arquivo, "wb") as f:
             f.write(content)
-        print(f"Arquivo {conta_arquivo} de {total_arquivos}: {my_filename} downloaded successfully.")
+        return f"{datetime.now().strftime('%d-%m-%Y %H:%M:%S')} - INFO - Arquivo {conta_arquivo} de {total_arquivos}: {my_filename} baixado com sucesso."
     except IOError:
-        print(f"Error writing file {my_filename}.")
+        return f"Error writing file {my_filename}."
 
 
-def download_files_parallel(urls, local_paths):
-    total_arquivos = range(len(urls))
-    with concurrent.futures.ProcessPoolExecutor(max_workers=2) as executor:
-        futures = [executor.submit(bot, url, local_path, conta_arquivo + 1, len(total_arquivos)) for url, local_path, conta_arquivo in zip(urls, local_paths, total_arquivos)]
-        concurrent.futures.wait(futures)
+def download_files_parallel(urls: list, local_paths: list):
+    arquivos = range(len(urls))
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        tasks = {executor.submit(bot, url, local_path, conta_arquivo + 1, len(arquivos)) for url, local_path, conta_arquivo in zip(urls, local_paths, arquivos)}
+        concluido, nao_concluido = wait(tasks, timeout=3)
+    return concluido, nao_concluido
 
 
 def busca_chaves(itens: dict, valor_item: str) -> str:
@@ -125,7 +129,7 @@ def get_payload(my_coluna: str, my_conteudo: str, my_periodo: str):
     return saida_formatada
 
 
-def on_download_button_click(my_periodos, my_colunas, my_conteudos):
+def on_download_button_click(my_periodos: list, my_colunas: list, my_conteudos: list):
     payloads = []
     filenames = []
     arquivos = 0
@@ -146,20 +150,72 @@ def on_download_button_click(my_periodos, my_colunas, my_conteudos):
     return payloads, filenames, arquivos
 
 
-opcao_selecionada = render_sidebar()
+def run_bot(my_payload, my_filename, conta_arquivo, numero_arquivos):
+    url = "http://tabnet.datasus.gov.br/cgi/tabcgi.exe?sih/cnv/spabr.def"
+
+    headers = {
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cache-Control': 'max-age=0',
+        'Connection': 'keep-alive',
+        'Content-Type': 'application/x-www-form-urlencoded',
+        # 'Cookie': 'TS014879da=01e046ca4c445832e6f2cfb8df59fc3595c3c6f8c62e94977c4cb3bb5c81d260d639d01408f73fbbaa6974d28b7a6f93347c58fac3; TS014879da=01e046ca4cc962acf44854618d460670689b95a0bd4cf7fe0b31dc126280d02900f4a74385c4f5b3c5d9f623dbdc872d70dcead90e',
+        'DNT': '1',
+        'Origin': 'http://tabnet.datasus.gov.br',
+        'Referer': 'http://tabnet.datasus.gov.br/cgi/deftohtm.exe?sih/cnv/spabr.def',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': 'Mozilla/5.0 X11; Linux x86_64 AppleWebKit/537.36 KHTML: like Gecko Chrome/120.0.0.0 Safari/537.36'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=my_payload, timeout=15)
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Encontrar a tag 'A' dentro da tag 'td'
+    tag_a = soup.find('td', class_='botao_opcao').findAll('a')
+
+    # Extrair o HREF e o texto da tag 'A'
+    filename_tabnet = tag_a[1].get('href')
+
+    result = download_file(filename_tabnet, my_filename, conta_arquivo, numero_arquivos)
+
+    return result
 
 
-if opcao_selecionada == "Extração de dados":
+if __name__ == '__main__':
 
-    periodos, colunas, conteudos = page_data_extraction()
+    opcao_selecionada = render_sidebar()
 
-    if st.button("Download", key=1):
-        if len(colunas) > 0 and len(conteudos) > 0 and len(periodos) > 0:
-            payloads, filenames, arquivos = on_download_button_click(periodos, colunas, conteudos)
-            st.write(f"Total de arquivos: {arquivos}")
-            download_files_parallel(payloads, filenames)
+    if opcao_selecionada == "Extração de dados":
 
-elif opcao_selecionada == "Processamento de dados":
-    page_data_processing()
-else:
-    page_data_loading()
+        periodos, colunas, conteudos = page_data_extraction()
+
+        if st.button("Download", key=1):
+            if len(colunas) > 0 and len(conteudos) > 0 and len(periodos) > 0:
+                payloads, filenames, total_arquivos = on_download_button_click(periodos, colunas, conteudos)
+                st.write(f"Total de arquivos: {total_arquivos}")
+
+                with st.spinner("Running..."):
+                    total = range(len(payloads))
+                    bar = st.progress(0)
+                    placeholder = st.empty()
+                    log_area = st.empty()
+                    log_data = ""
+                    for payload, filename, idx in zip(payloads, filenames, total):
+                        log_data += run_bot(payload, filename, filenames.index(filename) + 1, total_arquivos) + "\n"
+                        idx += 1
+                        progress = idx / len(total)
+                        placeholder.text(f"{int(progress * 100)}%")
+                        # update progress bar
+                        bar.progress(progress)
+                        log_area.markdown(f"```\n{log_data}\n```")
+                # falhou, sucesso = download_files_parallel(payloads, filenames)
+                # if len(sucesso) > 0:
+                #     st.success(f"Arquivos baixados com sucesso: {len(sucesso)}")
+                # if len(falhou) > 0:
+                #     st.error(f"Arquivos falhados: {len(falhou)}")
+
+    elif opcao_selecionada == "Processamento de dados":
+        page_data_processing()
+    else:
+        page_data_loading()
