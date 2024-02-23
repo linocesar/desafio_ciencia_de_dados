@@ -22,6 +22,10 @@ def get_mes_ano(arquivo: str) -> tuple:
 # Diretório onde estão os arquivos .tab
 diretorio_saida = 'storage/output'
 diretorio = 'storage/'
+if not os.path.exists(diretorio_saida):
+    os.makedirs(diretorio_saida)
+    print("Diretório criado:", diretorio_saida)
+
 # Listar todos os arquivos .tab no diretório
 arquivos_tab = [arquivo for arquivo in os.listdir(diretorio) if arquivo.endswith('.tab')]
 total_arquivos = len(arquivos_tab)

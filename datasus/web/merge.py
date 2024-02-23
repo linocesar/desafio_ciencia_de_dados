@@ -6,6 +6,10 @@ diretorio_base = 'storage/'
 diretorio_output = diretorio_base + 'output/'
 diretorio_merged = diretorio_base + 'merged/'
 
+if not os.path.exists(diretorio_merged):
+    os.makedirs(diretorio_merged)
+    print(f"Diretório {diretorio_merged} criado")
+
 arquivos_csv = [arquivo for arquivo in os.listdir(diretorio_output) if arquivo.endswith('.csv')]
 
 print(f"Números de arquivos: {len(arquivos_csv)}")
