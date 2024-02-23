@@ -25,7 +25,7 @@ def concat_grupo(merged_dir: str, concat_dir: str):
         df = pd.read_csv(csv, sep=',', encoding='utf-8')
         grupo.append(df)
     df_concat = pd.concat(grupo, ignore_index=True)
-    df_concat.to_csv(os.path.join(concat_dir, 'grupo.csv'), index=False)
+    df_concat.to_csv(os.path.join(concat_dir, 'grupo_procedimento.csv'), index=False, encoding='utf-8')
 
 
 def concat_subgrupo(merged_dir: str, concat_dir: str):
@@ -41,7 +41,7 @@ def concat_subgrupo(merged_dir: str, concat_dir: str):
         df = pd.read_csv(csv, sep=',', encoding='utf-8')
         subgrupo.append(df)
     df_concat = pd.concat(subgrupo, ignore_index=True)
-    df_concat.to_csv(os.path.join(concat_dir, 'subgrupo.csv'), index=False)
+    df_concat.to_csv(os.path.join(concat_dir, 'subgrupo_procedimento.csv'), index=False, encoding='utf-8')
 
 
 if __name__ == "__main__":
@@ -49,5 +49,7 @@ if __name__ == "__main__":
     storage = os.path.join(path_base, 'storage')
     merged = os.path.join(storage, 'merged')
     concat = create_directory(storage, 'concat')
+    print("Concatenando grupo dataset..")
     concat_grupo(merged, concat)
+    print("Concatenando subgrupo dataset..")
     concat_subgrupo(merged, concat)
