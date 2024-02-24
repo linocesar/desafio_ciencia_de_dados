@@ -4,6 +4,12 @@ import pandas as pd
 
 
 def create_directory(base: str, directory: str) -> str:
+    """Cria um diretório se ele não existir
+
+    :param base: Caminho base
+    :param directory: Nome do diretório
+    :return: Caminho do diretório criado
+    """
     path = os.path.join(base, directory)
     if not os.path.exists(path):
         os.makedirs(path)
@@ -13,6 +19,12 @@ def create_directory(base: str, directory: str) -> str:
 
 
 def concat_grupo(merged_dir: str, concat_dir: str):
+    """Concatena os arquivos do grupo
+
+    :param merged_dir: Diretório dos arquivos mesclados
+    :param concat_dir: Diretório dos arquivos concatenados
+    :return:
+    """
     padrao_grupo = r'^grupo_.*$'
     grupo = []
     arquivos = (
@@ -29,6 +41,11 @@ def concat_grupo(merged_dir: str, concat_dir: str):
 
 
 def concat_subgrupo(merged_dir: str, concat_dir: str):
+    """Concatena os arquivos do subgrupo procedimento
+
+    :param str merged_dir: Diretório dos arquivos mesclados
+    :param str concat_dir: Diretório dos arquivos concatenados
+    """
     padrao_subgrupo = r'^subgrupo_.*$'
     subgrupo = []
     arquivos = (
