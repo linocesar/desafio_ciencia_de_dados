@@ -3,7 +3,7 @@ import streamlit as st
 opcoes_ferramentas = [
     "Extração de dados",
     "Processamento de dados",
-    "Carregamento de dados"
+    "Exploração de dados"
 ]
 
 
