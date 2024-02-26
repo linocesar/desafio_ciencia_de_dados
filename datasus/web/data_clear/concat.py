@@ -1,7 +1,10 @@
 import os
 import re
 import pandas as pd
-from data_clear.utils import create_directory
+
+from data_clear.utils import get_arquivos_formato, create_directory, get_path_filename
+
+import streamlit as st
 
 
 def concat_grupo(merged_dir: str, concat_dir: str):
@@ -10,14 +13,12 @@ def concat_grupo(merged_dir: str, concat_dir: str):
     :param str merged_dir: Diretorio dos arquivos mesclados
     :param str concat_dir: Diretorio dos arquivos concatenados
     """
-    padrao_grupo = r'^grupo_.*$'
     grupo = []
-
+    filename = 'grupo_subgrupo_procedimento_quantidade_valor_aprovado.csv'
     # Lista os arquivos do diretorio merged_dir que terminam com '.csv' e que contem o padrao_grupo.
     arquivos = (
-                [arquivo for arquivo in os.listdir(merged_dir)
-                 if arquivo.endswith('.csv') and
-                 re.match(padrao_grupo, arquivo)]
+        [arquivo for arquivo in os.listdir(merged_dir)
+         if arquivo.endswith('.csv')]
     )
     # Itera sobre os arquivos e adiciona ao grupo.
     for arquivo in arquivos:
@@ -29,9 +30,11 @@ def concat_grupo(merged_dir: str, concat_dir: str):
     try:
         # Salva o arquivo concatenado no diretorio concat_dir.
         # O arquivo concatenado sera salvo com o nome 'grupo_procedimento.csv'.
-        df_concat.to_csv(os.path.join(concat_dir, 'grupo_procedimento.csv'), index=False, encoding='utf-8')
+        df_concat.to_csv(os.path.join(concat_dir, filename), index=False, encoding='utf-8')
+        st.caption(f"Arquivo {filename} gerado com sucesso.")
     except FileNotFoundError:
-        print(f"DirectÛrio {concat_dir} n„o encontrado")
+        st.caption(f"Diret√≥rio {concat_dir} n√£o encontrado")
+        st.caption(f"Arquivo {filename} n√£o gerado.")
 
 
 def concat_subgrupo(merged_dir: str, concat_dir: str):
@@ -45,9 +48,9 @@ def concat_subgrupo(merged_dir: str, concat_dir: str):
 
     # Lista os arquivos do diretorio merged_dir que terminam com '.csv' e que contem o padrao_subgrupo.
     arquivos = (
-                [arquivo for arquivo in os.listdir(merged_dir)
-                 if arquivo.endswith('.csv') and
-                 re.match(padrao_subgrupo, arquivo)]
+        [arquivo for arquivo in os.listdir(merged_dir)
+         if arquivo.endswith('.csv') and
+         re.match(padrao_subgrupo, arquivo)]
     )
     # Itera sobre os arquivos e adiciona ao subgrupo.
     for arquivo in arquivos:
@@ -60,17 +63,21 @@ def concat_subgrupo(merged_dir: str, concat_dir: str):
         # Salva o arquivo concatenado no diretorio concat_dir.
         # O arquivo concatenado sera salvo com o nome 'subgrupo_procedimento.csv'.
         df_concat.to_csv(os.path.join(concat_dir, 'subgrupo_procedimento.csv'), index=False, encoding='utf-8')
+        st.caption(f"Arquivo subgrupo_procedimento.csv gerado com sucesso.")
     except FileNotFoundError:
-        print(f"DirectÛrio {concat_dir} n„o encontrado")
+        st.caption(f"Diret√≥rio {concat_dir} n√£o encontrado")
+        st.caption(f"Arquivo subgrupo_procedimento.csv n√£o gerado.")
+
+
+def start():
+    path_base = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
+    storage = os.path.join(path_base, 'storage')
+    merged = os.path.join(storage, 'merged_grupo_subgrupo')
+    concat = create_directory(storage, 'concat')
+    st.caption("Concatenando grupo dataset..")
+    concat_grupo(merged, concat)
+    st.caption("Concatenado!")
 
 
 if __name__ == "__main__":
-    path_base = os.path.dirname(os.path.abspath(__file__))
-    storage = os.path.join(path_base, 'storage')
-    merged = os.path.join(storage, 'merged')
-    concat = create_directory(storage, 'concat')
-    print("Concatenando grupo dataset..")
-    concat_grupo(merged, concat)
-    print("Concatenando subgrupo dataset..")
-    concat_subgrupo(merged, concat)
-    print("Concatenado!")
+    start()

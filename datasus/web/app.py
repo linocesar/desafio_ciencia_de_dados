@@ -13,6 +13,11 @@ from sidebar import render_sidebar
 import coluna as item_colunas
 import conteudo as item_conteudos
 import periodos as item_periodos
+from markdown import get_markdown_text_data_clean, get_markdown_text_data_merge, get_markdown_text_data_merge_grupo
+from data_clear import sanitizer as data_clean
+from data_clear import merge as merge_data
+from data_clear import concat as concat_data
+from data_clear import merge_groups as merge_groups_data
 
 st.set_page_config(layout="wide", page_title='DATASUS')
 st.title("DATASUS")
@@ -30,11 +35,11 @@ def page_data_extraction():
 
 
 def page_data_processing():
-    if "file_uploader" not in st.session_state:
-        st.session_state["file_uploader"] = 0
-
-    if "uploaded_files" not in st.session_state:
-        st.session_state["uploaded_files"] = []
+    # if "file_uploader" not in st.session_state:
+    #     st.session_state["file_uploader"] = 0
+    #
+    # if "uploaded_files" not in st.session_state:
+    #     st.session_state["uploaded_files"] = []
 
     st.write("Processamento de dados")
     files_path = os.getcwd() + "/storage/"
@@ -42,17 +47,60 @@ def page_data_processing():
                  os.path.isfile(os.path.join(files_path, file)) and file.endswith(".tab")]
     st.info(f"{len(file_list)} arquivos .tab presentes no diretório {files_path}")
 
-    files = st.file_uploader("Selecione o arquivo .tab", type=['tab'], accept_multiple_files=True,
-                             key=st.session_state["file_uploader"], )
+    # files = st.file_uploader("Selecione o arquivo .tab", type=['tab'], accept_multiple_files=True,
+    #                          key=st.session_state["file_uploader"], )
+    #
+    # if files:
+    #     st.session_state["uploaded_files"] = files
+    #
+    # if st.button("Limpar arquivos"):
+    #     st.session_state["file_uploader"] += 1
+    #     st.rerun()
+    #
+    # st.write("Número de arquivos selecionados: ", len(files))
 
-    if files:
-        st.session_state["uploaded_files"] = files
+    with st.container(border=True):
+        st.markdown("""##### Data Clean 🧹""")
+        get_markdown_text_data_clean()
 
-    if st.button("Limpar arquivos"):
-        st.session_state["file_uploader"] += 1
-        st.rerun()
+        if st.button("Executar", key="bt1"):
+            with st.status("Cleaning data...", expanded=True) as status_clean:
+                data_clean.start()
+                status_clean.update(label="Data Clean concluída.", expanded=True)
 
-    st.write("Número de arquivos selecionados: ", len(files))
+    with st.container(border=True):
+        st.markdown('''##### Data Merge Quantidades e Valores 🔄''')
+        get_markdown_text_data_merge()
+        if st.button("Executar", key="bt2"):
+            with st.status("Merging data...", expanded=True) as status_merge_one:
+                st.caption("Carregando dados...")
+                merge_data.start()
+                status_merge_one.update(label="Merge Data concluída.", expanded=True)
+
+    with st.container(border=True):
+        st.markdown('''##### Data Merge Grupos e Subgrupos🔄''')
+        get_markdown_text_data_merge_grupo()
+        if st.button("Executar", key="bt3"):
+            with st.status("Merging data...", expanded=True) as status_merge_two:
+                st.caption("Carregando dados...")
+                merge_groups_data.start()
+                status_merge_two.update(label="Merge Data concluída.", expanded=True)
+
+    with st.container(border=True):
+        st.markdown('''##### Data Concatenate ➕''')
+        if st.button("Executar", key="bt4"):
+            with st.status("concatenating data...", expanded=True) as status_concat:
+                st.caption("Carregando dados...")
+                concat_data.start()
+                status_concat.update(label="Concatenate Data concluída.", expanded=True)
+
+    with st.container(border=True):
+        st.markdown('''##### Data Merge Geolocation🔗''')
+        if st.button("Executar", key="bt5"):
+            with st.status("Data joinning...", expanded=True) as status_join:
+                st.caption("Carregando dados...")
+                #start
+                status_join.update(label="Data marge concluída.", expanded=True)
 
 
 def uploader_callback():
@@ -61,8 +109,8 @@ def uploader_callback():
         print('Uploaded file #%d' % st.session_state['ctr'])
 
 
-def page_data_loading():
-    st.write("Carregamento de dados")
+def page_data_exploration():
+    st.write("Exploração de dados")
 
 
 def bot(my_payload: str, my_filename: str, conta_arquivo: int, total_arquivos: int):
@@ -215,6 +263,10 @@ def run_bot(my_payload, my_filename, conta_arquivo, numero_arquivos):
         return f"{datetime.now().strftime('%d-%m-%Y %H:%M:%S')} - INFO - Arquivo {conta_arquivo} de {total_arquivos}: {my_filename} não foi possível baixar. ❌"
 
 
+def raw_data():
+    pass
+
+
 if __name__ == '__main__':
 
     opcao_selecionada = render_sidebar()
@@ -252,4 +304,4 @@ if __name__ == '__main__':
     elif opcao_selecionada == "Processamento de dados":
         page_data_processing()
     else:
-        page_data_loading()
+        page_data_exploration()
