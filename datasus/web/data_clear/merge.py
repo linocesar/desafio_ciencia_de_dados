@@ -130,31 +130,24 @@ def merged_subgrupo_procedimento(subgrupo: dict, diretorio_input: str, diretorio
     return subgrupo_merged
 
 
-def start():
-    # Mapeia o diretorio base web
-    path_base = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
-    # Mapeia o diretorio storage
-    storage = os.path.join(path_base, 'storage')
-    #  Mapeia o diretorio output
-    output = os.path.join(storage, 'output')
-    # Cria e/ou mapeia o diretorio merged
-    merged = create_directory(storage, 'merged_quantidade_valor')
+def start(input_dir, output_dir):
     padrao_grupo = r'^grupo_.*$'
     padrao_subgrupo = r'^subgrupo_.*$'
-    arquivos_csv = get_arquivos_formato(output, '.csv')
-    periodos = get_periodos(arquivos_csv)
-    grupo = get_agrupagem(padrao_grupo, periodos, arquivos_csv)
-    numero_arquivos_grupo = merge_grupo_procedimento(grupo, output, merged)
-    subgrupo = get_agrupagem(padrao_subgrupo, periodos, arquivos_csv)
-    numero_arquivos_subgrupo = merged_subgrupo_procedimento(subgrupo, output, merged)
-    st.caption("Merge finalizado!")
-    st.caption(f"Total de arquivos .csv processados: {len(arquivos_csv)}")
-    st.caption(f"Total de arquivos .csv gerados com merge: {numero_arquivos_grupo + numero_arquivos_subgrupo}")
-    st.caption(f"Total de arquivos .csv mesclados do grupo: {numero_arquivos_grupo}")
-    st.caption(f"Total de arquivos .csv mesclados do subgrupo: {numero_arquivos_subgrupo}")
-    st.caption(f"Total de arquivos não mesclados do grupo: {len(grupo) - numero_arquivos_grupo}")
-    st.caption(f"Total de arquivos não mesclados do subgrupo: {len(subgrupo) - numero_arquivos_subgrupo}")
-
-
-if __name__ == '__main__':
-    start()
+    arquivos_csv = get_arquivos_formato(input_dir, '.csv')
+    try:
+        if len(arquivos_csv) == 0:
+            raise ValueError('Nenhum arquivo .csv encontrado.')
+        periodos = get_periodos(arquivos_csv)
+        grupo = get_agrupagem(padrao_grupo, periodos, arquivos_csv)
+        numero_arquivos_grupo = merge_grupo_procedimento(grupo, input_dir, output_dir)
+        subgrupo = get_agrupagem(padrao_subgrupo, periodos, arquivos_csv)
+        numero_arquivos_subgrupo = merged_subgrupo_procedimento(subgrupo, input_dir, output_dir)
+        st.caption("Merge finalizado!")
+        st.caption(f"Total de arquivos .csv processados: {len(arquivos_csv)}")
+        st.caption(f"Total de arquivos .csv gerados com merge: {numero_arquivos_grupo + numero_arquivos_subgrupo}")
+        st.caption(f"Total de arquivos .csv mesclados do grupo: {numero_arquivos_grupo}")
+        st.caption(f"Total de arquivos .csv mesclados do subgrupo: {numero_arquivos_subgrupo}")
+        st.caption(f"Total de arquivos não mesclados do grupo: {len(grupo) - numero_arquivos_grupo}")
+        st.caption(f"Total de arquivos não mesclados do subgrupo: {len(subgrupo) - numero_arquivos_subgrupo}")
+    except Exception:
+        st.caption(f'Não foi possível realizar a concatenação.')

@@ -18,10 +18,24 @@ from data_clear import sanitizer as data_clean
 from data_clear import merge as merge_data
 from data_clear import concat as concat_data
 from data_clear import merge_groups as merge_groups_data
+from data_clear.utils import create_directory
+
+datasus_dir = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
+storage_dir = create_directory(datasus_dir, "storage")
+data_extraction_dir = create_directory(storage_dir, "1_data_extraction")
+tabnet_raw_data_dir = create_directory(data_extraction_dir, "tabnet_raw_data")
+data_processing_dir = create_directory(storage_dir, "2_data_processing")
+data_clean_dir = create_directory(data_processing_dir, '1_data_clean')
+data_merged_quantidade_valor_dir = create_directory(data_processing_dir, '2_data_merged_quantidade_valor')
+data_merged_grupos_subgrupos_dir = create_directory(data_processing_dir, '3_data_merged_grupos_subgrupos')
+data_concatenation_dir = create_directory(data_processing_dir, '4_data_concatenation')
+data_exploration_dir = create_directory(storage_dir, "3_data_exploration")
+
 
 st.set_page_config(layout="wide", page_title='DATASUS')
 st.title("DATASUS")
 st.write("DADOS DETALHADOS DAS AIH - POR LOCAL INTERNAÇÃO - BRASIL")
+
 
 
 def page_data_extraction():
@@ -42,10 +56,9 @@ def page_data_processing():
     #     st.session_state["uploaded_files"] = []
 
     st.write("Processamento de dados")
-    files_path = os.getcwd() + "/storage/"
-    file_list = [file for file in os.listdir(files_path) if
-                 os.path.isfile(os.path.join(files_path, file)) and file.endswith(".tab")]
-    st.info(f"{len(file_list)} arquivos .tab presentes no diretório {files_path}")
+    file_list = [file for file in os.listdir(tabnet_raw_data_dir) if
+                 os.path.isfile(os.path.join(tabnet_raw_data_dir, file)) and file.endswith(".tab")]
+    st.info(f"{len(file_list)} arquivos .tab presentes no diretório {tabnet_raw_data_dir}")
 
     # files = st.file_uploader("Selecione o arquivo .tab", type=['tab'], accept_multiple_files=True,
     #                          key=st.session_state["file_uploader"], )
@@ -65,7 +78,7 @@ def page_data_processing():
 
         if st.button("Executar", key="bt1"):
             with st.status("Cleaning data...", expanded=True) as status_clean:
-                data_clean.start()
+                data_clean.start(tabnet_raw_data_dir, data_clean_dir)
                 status_clean.update(label="Data Clean concluída.", expanded=True)
 
     with st.container(border=True):
@@ -74,7 +87,7 @@ def page_data_processing():
         if st.button("Executar", key="bt2"):
             with st.status("Merging data...", expanded=True) as status_merge_one:
                 st.caption("Carregando dados...")
-                merge_data.start()
+                merge_data.start(data_clean_dir, data_merged_quantidade_valor_dir)
                 status_merge_one.update(label="Merge Data concluída.", expanded=True)
 
     with st.container(border=True):
@@ -83,7 +96,7 @@ def page_data_processing():
         if st.button("Executar", key="bt3"):
             with st.status("Merging data...", expanded=True) as status_merge_two:
                 st.caption("Carregando dados...")
-                merge_groups_data.start()
+                merge_groups_data.start(data_merged_quantidade_valor_dir, data_merged_grupos_subgrupos_dir)
                 status_merge_two.update(label="Merge Data concluída.", expanded=True)
 
     with st.container(border=True):
@@ -91,7 +104,7 @@ def page_data_processing():
         if st.button("Executar", key="bt4"):
             with st.status("concatenating data...", expanded=True) as status_concat:
                 st.caption("Carregando dados...")
-                concat_data.start()
+                concat_data.start(data_merged_grupos_subgrupos_dir, data_concatenation_dir)
                 status_concat.update(label="Concatenate Data concluída.", expanded=True)
 
     with st.container(border=True):
@@ -99,7 +112,7 @@ def page_data_processing():
         if st.button("Executar", key="bt5"):
             with st.status("Data joinning...", expanded=True) as status_join:
                 st.caption("Carregando dados...")
-                #start
+                # start
                 status_join.update(label="Data marge concluída.", expanded=True)
 
 
@@ -150,11 +163,11 @@ def format_filename(my_coluna: str, my_conteudo: str, my_periodo: str) -> str:
     return my_filename
 
 
-def download_file(filename_tabnet: str, my_filename: str, conta_arquivo: int, total_arquivos: int):
-    diretorio = "storage"
-    if not os.path.exists(diretorio):
-        os.mkdir(diretorio)
-        print(f"Diretório {diretorio} criado com sucesso.")
+def download_file(filename_tabnet: str, my_filename: str, conta_arquivo: int, total_arquivos: int, tabnet_dir):
+    diretorio = tabnet_dir
+    # if not os.path.exists(diretorio):
+    #     os.mkdir(diretorio)
+    #     print(f"Diretório {diretorio} criado com sucesso.")
     caminho_arquivo = os.path.join(diretorio, my_filename)
 
     url = "http://tabnet.datasus.gov.br" + filename_tabnet
@@ -228,7 +241,7 @@ def on_download_button_click(my_periodos: list, my_colunas: list, my_conteudos: 
     return payloads, filenames, arquivos
 
 
-def run_bot(my_payload, my_filename, conta_arquivo, numero_arquivos):
+def run_bot(my_payload, my_filename, conta_arquivo, numero_arquivos, tabnet_dir: str):
     url = "http://tabnet.datasus.gov.br/cgi/tabcgi.exe?sih/cnv/spabr.def"
 
     headers = {
@@ -256,18 +269,29 @@ def run_bot(my_payload, my_filename, conta_arquivo, numero_arquivos):
         # Extrair o HREF e o texto da tag 'A'
         filename_tabnet = tag_a[1].get('href')
 
-        result = download_file(filename_tabnet, my_filename, conta_arquivo, numero_arquivos)
+        result = download_file(filename_tabnet, my_filename, conta_arquivo, numero_arquivos, tabnet_dir)
 
         return result
     except Exception as e:
-        return f"{datetime.now().strftime('%d-%m-%Y %H:%M:%S')} - INFO - Arquivo {conta_arquivo} de {total_arquivos}: {my_filename} não foi possível baixar. ❌"
+        return f"{datetime.now().strftime('%d-%m-%Y %H:%M:%S')} - INFO - Arquivo {conta_arquivo} de {numero_arquivos}: {my_filename} não foi possível baixar. ❌"
 
 
-def raw_data():
-    pass
+def create_directory_tree():
+    diretorio_base_datasus = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
+    storage = create_directory(diretorio_base_datasus, "storage")
+    data_extraction = create_directory(storage, "1_data_extraction")
+    tabnet_raw_data = create_directory(data_extraction, "tabnet_raw_data")
+    data_processing = create_directory(storage, "2_data_processing")
+    data_clean = create_directory(data_processing, '1_data_clean')
+    data_merged_quantidade_valor = create_directory(data_processing, '2_data_merged_quantidade_valor')
+    data_merged_grupos_subgrupos = create_directory(data_processing, '3_data_merged_grupos_subgrupos')
+    data_concatenation = create_directory(data_processing, '4_data_concatenation')
+    data_exploration = create_directory(storage, "3_data_exploration")
+    return tabnet_raw_data, data_clean, data_merged_quantidade_valor, data_merged_grupos_subgrupos, data_concatenation
 
 
-if __name__ == '__main__':
+def start():
+
 
     opcao_selecionada = render_sidebar()
 
@@ -288,7 +312,7 @@ if __name__ == '__main__':
                     log_data = ""
                     for payload, filename, idx in zip(payloads, filenames, total):
                         log_data += run_bot(payload, filename, filenames.index(filename) + 1,
-                                            total_arquivos) + "\n"
+                                            total_arquivos, tabnet_raw_data_dir) + "\n"
                         idx += 1
                         progress = idx / len(total)
                         placeholder.text(f"{int(progress * 100)}%")
@@ -305,3 +329,11 @@ if __name__ == '__main__':
         page_data_processing()
     else:
         page_data_exploration()
+
+
+def raw_data():
+    pass
+
+
+if __name__ == '__main__':
+    start()

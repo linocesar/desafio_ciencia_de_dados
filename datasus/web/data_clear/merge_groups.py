@@ -48,19 +48,11 @@ def merge_grupo_subgrupo(grupo: dict, diretorio_input: str, diretorio_merged: st
     return grupo_merged
 
 
-def start():
-    path_base = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
-    # Mapeia o diretorio storage
-    storage = os.path.join(path_base, 'storage')
-    #  Mapeia o diretorio output
-    output = os.path.join(storage, 'merged_quantidade_valor')
-    merged = create_directory(storage, 'merged_grupo_subgrupo')
-    arquivos_csv = get_arquivos_formato(output, '.csv')
+def start(input_dir, output_dir):
+    arquivos_csv = get_arquivos_formato(input_dir, '.csv')
     periodos = get_periodos(arquivos_csv)
     grupo_subgrupo = get_arquivos_agrupados_por_periodo(arquivos_csv, periodos)
-    numero_arquivos_grupo_subgrupo = merge_grupo_subgrupo(grupo_subgrupo, output, merged)
+    numero_arquivos_grupo_subgrupo = merge_grupo_subgrupo(grupo_subgrupo, input_dir, output_dir)
+    st.caption(f"Total de arquivos .csv gerados com merge: {numero_arquivos_grupo_subgrupo}")
     st.caption("Merge finalizado!")
 
-
-if __name__ == '__main__':
-    start()
