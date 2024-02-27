@@ -29,7 +29,8 @@ def get_agrupagem(padrao: str, periodos: list, arquivos: list) -> dict:
     :param str padrao: Padrao para identificar os arquivos .csv
     :param list periodos: Periodos (mes, ano)
     :param list arquivos: Arquivos .csv
-    :return:
+    :return: Dicionario com as chaves e valores
+    :rtype: dict
     """
     # Dicionario: periodo (mes, ano) e lista de arquivos .csv.
     # Exemplo:
@@ -76,7 +77,7 @@ def merge_grupo_procedimento(grupo: dict, diretorio_input: str, diretorio_merged
                 # Dataframe grupo procedimento valor a ser lido
                 df_valor = pd.read_csv(csv_valor, sep=',', encoding='utf-8')
                 # Dataframe grupo procedimento quantidade valor a ser mesclado
-                df_merged = pd.merge(df_quantidade, df_valor, left_on='cod_municipio',right_on='cod_municipio', how='inner', suffixes=('_qtd', '_val'))
+                df_merged = pd.merge(df_quantidade, df_valor, on='cod_municipio')
                 # Arquivo csv mesclado a ser salvo
                 path_filename = get_path_filename(diretorio_merged, nome_arquivo)
                 df_merged.to_csv(path_filename, sep=',', index=False, encoding='utf-8')
@@ -115,9 +116,7 @@ def merged_subgrupo_procedimento(subgrupo: dict, diretorio_input: str, diretorio
                 # Dataframe subgrupo procedimento valor gerado
                 df_valor = pd.read_csv(csv_valor, sep=',', encoding='utf-8')
                 # Dataframe subgrupo procedimento quantidade valor mesclado
-                df_merged = pd.merge(df_quantidade, df_valor, left_on='cod_municipio', right_on='cod_municipio',
-                                    how='inner',
-                                    suffixes=('_qtd', '_val'))
+                df_merged = pd.merge(df_quantidade, df_valor, on='cod_municipio')
                 # Arquivo csv mesclado a ser salvo
                 path_filename = get_path_filename(diretorio_merged, nome_arquivo)
                 df_merged.to_csv(path_filename, sep=',', index=False, encoding='utf-8')
