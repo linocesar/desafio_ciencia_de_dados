@@ -117,7 +117,7 @@ def merged_subgrupo_procedimento(subgrupo: dict, diretorio_input: str, diretorio
                 # Dataframe subgrupo procedimento quantidade valor mesclado
                 df_merged = pd.merge(df_quantidade, df_valor, left_on='cod_municipio', right_on='cod_municipio',
                                     how='inner',
-                                    suffixes=('_qdt', '_val'))
+                                    suffixes=('_qtd', '_val'))
                 # Arquivo csv mesclado a ser salvo
                 path_filename = get_path_filename(diretorio_merged, nome_arquivo)
                 df_merged.to_csv(path_filename, sep=',', index=False, encoding='utf-8')
