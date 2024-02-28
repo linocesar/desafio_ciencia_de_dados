@@ -95,6 +95,9 @@ def start(input_dir: str, output_dir: str):
             # Trocar o formato do arquivo .tab para .csv.
             arquivo = arquivo.replace('.tab', '.csv')
 
+            # Remover a coluna 'total' do DataFrame.
+            df = df.drop('total', axis=1)
+
             # Salvar o DataFrame com o mesmo nome do arquivo original
             df.to_csv(os.path.join(output_dir, arquivo), sep=',', index=False, encoding='utf-8')
 
