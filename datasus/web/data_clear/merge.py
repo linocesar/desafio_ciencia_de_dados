@@ -68,6 +68,8 @@ def merge_grupo_procedimento(grupo: dict, diretorio_input: str, diretorio_merged
 
             if len(grupo[mes_ano]) == 2:
 
+                # Ordena os arquivos .csv por ordem alfabetica
+                grupo[mes_ano] = sorted(grupo[mes_ano])
                 # Arquivo csv grupo procedimento quantidade a ser lido
                 csv_quantidade = get_path_filename(diretorio_input, grupo[mes_ano][0]) # os.path.join(diretorio_output, grupo[mes_ano][0])
                 # Arquivo csv grupo procedimento valor a ser lido
@@ -77,7 +79,8 @@ def merge_grupo_procedimento(grupo: dict, diretorio_input: str, diretorio_merged
                 # Dataframe grupo procedimento valor a ser lido
                 df_valor = pd.read_csv(csv_valor, sep=',', encoding='utf-8')
                 # Dataframe grupo procedimento quantidade valor a ser mesclado
-                df_merged = pd.merge(df_quantidade, df_valor, on='cod_municipio')
+                df_merged = pd.merge(df_quantidade, df_valor, on=['cod_municipio', 'uf', 'municipio', 'ano', 'mes'],
+                                     suffixes=('_qtd', '_val'))
                 # Arquivo csv mesclado a ser salvo
                 path_filename = get_path_filename(diretorio_merged, nome_arquivo)
                 df_merged.to_csv(path_filename, sep=',', index=False, encoding='utf-8')
@@ -107,6 +110,9 @@ def merged_subgrupo_procedimento(subgrupo: dict, diretorio_input: str, diretorio
         for k, mes_ano in enumerate(subgrupo.keys()):
             nome_arquivo = 'subgrupo_procedimento_quantidade_valor_aprovado_' + mes_ano + '.csv'
             if len(subgrupo[mes_ano]) == 2:
+
+                # Ordena os arquivos .csv do subgrupo.
+                subgrupo[mes_ano] = sorted(subgrupo[mes_ano])
                 # Arquivo csv subgrupo procedimento quantidade mapeado
                 csv_quantidade = get_path_filename(diretorio_input, subgrupo[mes_ano][0])
                 # Arquivo csv subgrupo procedimento valor mapeado
@@ -116,7 +122,8 @@ def merged_subgrupo_procedimento(subgrupo: dict, diretorio_input: str, diretorio
                 # Dataframe subgrupo procedimento valor gerado
                 df_valor = pd.read_csv(csv_valor, sep=',', encoding='utf-8')
                 # Dataframe subgrupo procedimento quantidade valor mesclado
-                df_merged = pd.merge(df_quantidade, df_valor, on='cod_municipio')
+                df_merged = pd.merge(df_quantidade, df_valor, on=['cod_municipio', 'uf', 'municipio', 'ano', 'mes'],
+                                     suffixes=('_qtd', '_val'))
                 # Arquivo csv mesclado a ser salvo
                 path_filename = get_path_filename(diretorio_merged, nome_arquivo)
                 df_merged.to_csv(path_filename, sep=',', index=False, encoding='utf-8')
