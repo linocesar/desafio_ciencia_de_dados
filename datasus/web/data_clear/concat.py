@@ -20,21 +20,25 @@ def concat_grupo(merged_dir: str, concat_dir: str):
         [arquivo for arquivo in os.listdir(merged_dir)
          if arquivo.endswith('.csv')]
     )
-    # Itera sobre os arquivos e adiciona ao grupo.
-    for arquivo in arquivos:
-        csv = os.path.join(merged_dir, arquivo)
-        df = pd.read_csv(csv, sep=',', encoding='utf-8')
-        grupo.append(df)
-    #  Concatena os dataframes do grupo.
-    df_concat = pd.concat(grupo, ignore_index=True)
     try:
+        if len(arquivos) == 0:
+            raise ValueError
+        # Itera sobre os arquivos e adiciona ao grupo.
+        st.caption("Concatenando dataset..")
+        for arquivo in arquivos:
+            csv = os.path.join(merged_dir, arquivo)
+            df = pd.read_csv(csv, sep=',', encoding='utf-8')
+            grupo.append(df)
+        #  Concatena os dataframes do grupo.
+        df_concat = pd.concat(grupo, ignore_index=True)
+
         # Salva o arquivo concatenado no diretorio concat_dir.
         # O arquivo concatenado sera salvo com o nome 'grupo_procedimento.csv'.
         df_concat.to_csv(os.path.join(concat_dir, filename), index=False, encoding='utf-8')
+        st.caption("Concatenado!")
         st.caption(f"Arquivo {filename} gerado com sucesso.")
-    except FileNotFoundError:
-        st.caption(f"Diretório {concat_dir} não encontrado")
-        st.caption(f"Arquivo {filename} não gerado.")
+    except Exception as e:
+        st.caption('Nenhum arquivo .csv foi encontrado')
 
 
 def concat_subgrupo(merged_dir: str, concat_dir: str):
@@ -69,15 +73,5 @@ def concat_subgrupo(merged_dir: str, concat_dir: str):
         st.caption(f"Arquivo subgrupo_procedimento.csv não gerado.")
 
 
-def start():
-    path_base = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
-    storage = os.path.join(path_base, 'storage')
-    merged = os.path.join(storage, 'merged_grupo_subgrupo')
-    concat = create_directory(storage, 'concat')
-    st.caption("Concatenando grupo dataset..")
-    concat_grupo(merged, concat)
-    st.caption("Concatenado!")
-
-
-if __name__ == "__main__":
-    start()
+def start(input_dir, output_dir):
+    concat_grupo(input_dir, output_dir)

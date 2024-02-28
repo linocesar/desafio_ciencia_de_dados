@@ -25,7 +25,8 @@ def merge_grupo_subgrupo(grupo: dict, diretorio_input: str, diretorio_merged: st
             nome_arquivo = 'grupo_subgrupo_procedimento_quantidade_valor_aprovado_' + mes_ano + '.csv'
 
             if len(grupo[mes_ano]) == 2:
-
+                # Ordena os arquivos .csv do grupo alfabeticamente
+                grupo[mes_ano] = sorted(grupo[mes_ano])
                 # Arquivo csv grupo procedimento quantidade a ser lido
                 csv_quantidade = get_path_filename(diretorio_input, grupo[mes_ano][0])  # os.path.join(diretorio_output, grupo[mes_ano][0])
                 # Arquivo csv grupo procedimento valor a ser lido
@@ -35,8 +36,8 @@ def merge_grupo_subgrupo(grupo: dict, diretorio_input: str, diretorio_merged: st
                 # Dataframe grupo procedimento valor a ser lido
                 df_valor = pd.read_csv(csv_valor, sep=',', encoding='utf-8')
                 # Dataframe grupo procedimento quantidade valor a ser mesclado
-                df_merged = pd.merge(df_quantidade, df_valor, left_on='cod_municipio', right_on='cod_municipio',
-                                     how='inner', suffixes=('_grupo', '_subgrupo'))
+                df_merged = pd.merge(df_quantidade, df_valor, on=['cod_municipio', 'uf', 'municipio', 'ano', 'mes'],
+                                     suffixes=('_grupo', '_subgrupo'))
                 # Arquivo csv mesclado a ser salvo
                 path_filename = get_path_filename(diretorio_merged, nome_arquivo)
                 df_merged.to_csv(path_filename, sep=',', index=False, encoding='utf-8')
@@ -48,19 +49,11 @@ def merge_grupo_subgrupo(grupo: dict, diretorio_input: str, diretorio_merged: st
     return grupo_merged
 
 
-def start():
-    path_base = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
-    # Mapeia o diretorio storage
-    storage = os.path.join(path_base, 'storage')
-    #  Mapeia o diretorio output
-    output = os.path.join(storage, 'merged_quantidade_valor')
-    merged = create_directory(storage, 'merged_grupo_subgrupo')
-    arquivos_csv = get_arquivos_formato(output, '.csv')
+def start(input_dir, output_dir):
+    arquivos_csv = get_arquivos_formato(input_dir, '.csv')
     periodos = get_periodos(arquivos_csv)
     grupo_subgrupo = get_arquivos_agrupados_por_periodo(arquivos_csv, periodos)
-    numero_arquivos_grupo_subgrupo = merge_grupo_subgrupo(grupo_subgrupo, output, merged)
+    numero_arquivos_grupo_subgrupo = merge_grupo_subgrupo(grupo_subgrupo, input_dir, output_dir)
+    st.caption(f"Total de arquivos .csv gerados com merge: {numero_arquivos_grupo_subgrupo}")
     st.caption("Merge finalizado!")
 
-
-if __name__ == '__main__':
-    start()
