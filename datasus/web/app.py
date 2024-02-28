@@ -18,6 +18,7 @@ from data_clear import sanitizer as data_clean
 from data_clear import merge as merge_data
 from data_clear import concat as concat_data
 from data_clear import merge_groups as merge_groups_data
+from data_clear import merge_censo as merge_censo_data
 from data_clear.utils import create_directory
 
 datasus_dir = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
@@ -79,7 +80,7 @@ def page_data_processing():
         if st.button("Executar", key="bt1"):
             with st.status("Cleaning data...", expanded=True) as status_clean:
                 data_clean.start(tabnet_raw_data_dir, data_clean_dir)
-                status_clean.update(label="Data Clean concluída.", expanded=True)
+                status_clean.update(label="Data Clean ✅", expanded=True)
 
     with st.container(border=True):
         st.markdown('''##### Data Merge Quantidades e Valores 🔄''')
@@ -88,7 +89,7 @@ def page_data_processing():
             with st.status("Merging data...", expanded=True) as status_merge_one:
                 st.caption("Carregando dados...")
                 merge_data.start(data_clean_dir, data_merged_quantidade_valor_dir)
-                status_merge_one.update(label="Merge Data concluída.", expanded=True)
+                status_merge_one.update(label="Merge Data ✅", expanded=True)
 
     with st.container(border=True):
         st.markdown('''##### Data Merge Grupos e Subgrupos🔄''')
@@ -97,7 +98,7 @@ def page_data_processing():
             with st.status("Merging data...", expanded=True) as status_merge_two:
                 st.caption("Carregando dados...")
                 merge_groups_data.start(data_merged_quantidade_valor_dir, data_merged_grupos_subgrupos_dir)
-                status_merge_two.update(label="Merge Data concluída.", expanded=True)
+                status_merge_two.update(label="Merge Data ✅", expanded=True)
 
     with st.container(border=True):
         st.markdown('''##### Data Concatenate ➕''')
@@ -105,15 +106,22 @@ def page_data_processing():
             with st.status("concatenating data...", expanded=True) as status_concat:
                 st.caption("Carregando dados...")
                 concat_data.start(data_merged_grupos_subgrupos_dir, data_concatenation_dir)
-                status_concat.update(label="Concatenate Data concluída.", expanded=True)
+                status_concat.update(label="Concatenate Data ✅", expanded=True)
 
     with st.container(border=True):
-        st.markdown('''##### Data Merge Geolocation🔗''')
+        st.markdown('''##### Data Merge Censo Demográfico 2022🔗''')
+        file_censo = st.file_uploader("Selecione o arquivo CENSO 2022", type=['csv'], accept_multiple_files=False, key='uploader')
         if st.button("Executar", key="bt5"):
-            with st.status("Data joinning...", expanded=True) as status_join:
-                st.caption("Carregando dados...")
-                # start
-                status_join.update(label="Data marge concluída.", expanded=True)
+            try:
+                if file_censo is not None:
+                    with st.status("Data Merging...", expanded=True) as status_join:
+                        st.caption("Carregando dados...")
+                        merge_censo_data.start(file_censo, data_concatenation_dir, data_exploration_dir)
+                        status_join.update(label="Data merge ✅", expanded=True)
+                else:
+                    st.error("Selecione o arquivo CENSO 2022 no formato .csv")
+            except Exception as e:
+                st.caption(f"Erro ao executar o processo.")
 
 
 def uploader_callback():
