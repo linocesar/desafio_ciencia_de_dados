@@ -10,7 +10,7 @@ def get_markdown_text_data_clean():
     ###### Função `start()`:
     - Define algumas variáveis, como os diretórios de entrada e saída e o encoding a ser utilizado.
     - Verifica se o diretório de saída existe e, se não existir, o cria.
-    - Lista todos os arquivos com extensão ".tab" no diretório de entrada.
+    - Lista todos os arquivos com extensão "" no diretório de entrada.
     - Itera sobre cada arquivo encontrado:
       - Lê o arquivo usando o Pandas, aplicando o encoding especificado.
       - Renomeia as colunas do DataFrame usando a função `limpar_nome_colunas`.
@@ -24,7 +24,7 @@ def get_markdown_text_data_clean():
       - Ignora as duas últimas linhas do DataFrame.
       - Calcula o total dos valores no DataFrame.
       - Converte as colunas "mes" e "uf" para tipos categóricos.
-      - Altera o formato do arquivo de ".tab" para ".csv" e salva o DataFrame no diretório de saída.
+      - Altera o formato do arquivo de "" para ".csv" e salva o DataFrame no diretório de saída.
       - Verifica se o total calculado bate com o total do arquivo. Se não bater, adiciona o nome do arquivo a uma lista de arquivos com soma errada.
     - Imprime mensagens informando o progresso e resultados do processamento.
     - No final, imprime o total de arquivos processados e, se houver algum com soma errada, lista esses arquivos.

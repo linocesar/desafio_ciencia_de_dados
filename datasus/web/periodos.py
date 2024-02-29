@@ -1,6 +1,7 @@
 from render import generator_multiple_choices_periodos
 
 periodos = {
+    "Dez/2023": "spabr2312.dbf",
     "Nov/2023": "spabr2311.dbf",
     "Out/2023": "spabr2310.dbf",
     "Set/2023": "spabr2309.dbf",

@@ -17,86 +17,67 @@ def limpar_nome_colunas(nome):
 
 
 def get_mes_ano(arquivo: str) -> tuple:
-    mes: str = arquivo.rsplit('.tab')[0].split('_')[-2].upper()
-    ano: str = arquivo.rsplit('.tab')[0].split('_')[-1]
+    mes: str = arquivo.rsplit('.csv')[0].split('_')[-2].upper()
+    ano: str = arquivo.rsplit('.csv')[0].split('_')[-1]
     return mes, ano
 
 
 def start(input_dir: str, output_dir: str):
 
-    # Listar todos os arquivos .tab no diretório
-    arquivos_tab = [arquivo for arquivo in os.listdir(input_dir) if arquivo.endswith('.tab')]
+    # Listar todos os arquivos  no diretório
+    arquivos_tab = [arquivo for arquivo in os.listdir(input_dir) if arquivo.endswith('.csv')]
     total_arquivos = len(arquivos_tab)
     conta_arquivos = 0
     arquivos_com_soma_errada = []
     encoding = 'windows-1252'  # ISO-8859-15
 
     with st.empty():
-        # Iterar sobre cada arquivo .tab
+        # Iterar sobre cada arquivo
         for arquivo in arquivos_tab:
-            # Ler o arquivo .tab
-            df = pd.read_csv(os.path.join(input_dir, arquivo), sep=';', encoding=encoding, skiprows=4)
+            # Ler o arquivo
+            df = pd.read_csv(os.path.join(input_dir, arquivo), sep=';', encoding='latin1', skiprows=3, skipfooter=5, engine='python')
 
             # Realizar as alterações necessárias no DataFrame df
             # Renomear as colunas do DataFrame df
             df.columns = [limpar_nome_colunas(col) for col in df.columns]
-
-            # Ajustar os valores das colunas do DataFrame df para float dos arquivos .tab que contenham a nome 'valor'.
-            if arquivo.__contains__('valor'):
-                colunas_ajuste = df.columns[1:]
-                for coluna in colunas_ajuste:
-                    df[coluna] = df[coluna].astype(str).str.replace(',', '.').astype(float)
-
-            # Calcular o total do arquivo .tab.
-            total_tabnet = df.iloc[-1, -1]
-
-            # Adicionar colunas 'mes' e 'ano' com os valores correspondentes do nome do arquivo .tab.
-            df['mes'], df['ano'] = get_mes_ano(arquivo)
 
             # Adicionar coluna 'cod_municipio' com o código do município.
             df['cod_municipio'] = df['municipio'].apply(lambda x: x.split(' ')[0].strip())
             # Remover o código do município do nome do município.
             df['municipio'] = df['municipio'].apply(lambda x: ' '.join(x.split(' ')[1:]))
 
-            # Criar um DataFrame com os dados de UF ignorados.
-            df_uf = df[df['municipio'].str.contains('IGNORADO')].copy()
-            df_uf['uf'] = df_uf['municipio'].apply(lambda x: x.split('-')[1].strip())
-            df_uf.reset_index(inplace=True)
-
-            # Adicionar coluna 'prox_index' com o valor do índice anterior.
-            df_uf['prox_index'] = df_uf['index'].shift(-1)
-
-            # Alterar tipo de dados da coluna 'prox_index' para inteiros.
-            df_uf['prox_index'] = df_uf['prox_index'].fillna(len(df)).astype(int)
-
-            # Trabalhando apenas com as colunas index, prox_index e uf.
-            df_uf = df_uf[['index', 'prox_index', 'uf']]
-
-            # Iterar sobre cada linha do DataFrame df_uf.
-            for index, row in df_uf.iterrows():
-                # Seleciona os municípios do primeiro DataFrame no intervalo entre 'index' e 'prox_index' e atribui o
-                # valor de 'uf'
-                df.loc[row['index']:row['prox_index'] - 1, 'uf'] = row['uf']
-
             # Descartar as linhas que contenham 'IGNORADO' na coluna 'municipio'
             df = df[~df['municipio'].str.contains('IGNORADO')]
+
+            # Ajustar os valores das colunas do DataFrame df para float dos arquivos  que contenham a nome 'valor'.
+            if arquivo.__contains__('valor'):
+                df = df.replace('-', 0.0)
+                colunas_ajuste = df.columns[1:-1]
+                for coluna in colunas_ajuste:
+                    df[coluna] = df[coluna].astype(str).str.replace(',', '.').astype(float)
+            else:
+                df = df.replace('-', 0)
+                for coluna in df.columns[1:-1]:
+                    df[coluna] = df[coluna].apply(lambda x: int(x))
+
+            # Calcular o total do arquivo .csv.
+            total_tabnet = df.iloc[-1, -2]
+
+            # Dropa coluna 'total' do DataFrame df.
+            df = df.drop('total', axis=1)
 
             # Ignorar as duas últimas linhas
             df = df.iloc[:-2]
 
+            # Converter todas as colunas para tipo inteiro usando lambda e um loop
+            df['municipio'] = df['municipio'].astype('category')
+
             # Somar os valores de todas as linhas e colunas com exceção de: 'municipio', 'mes', 'ano','cod_municipio',
-            # 'uf' e 'total'
-            total_app = df.iloc[0:, 1:-5].sum().sum()
+            # e 'total'
+            total_app = df.iloc[0:, 1:-1].sum().sum()
 
-            # Converter as colunas 'mes' e 'uf' para tipos categóricos.
-            df['mes'] = df['mes'].astype('category')
-            df['uf'] = df['uf'].astype('category')
-
-            # Trocar o formato do arquivo .tab para .csv.
-            arquivo = arquivo.replace('.tab', '.csv')
-
-            # Remover a coluna 'total' do DataFrame.
-            df = df.drop('total', axis=1)
+            # Adicionar colunas 'mes' e 'ano' com os valores correspondentes do nome do arquivo .
+            df['mes'], df['ano'] = get_mes_ano(arquivo)
 
             # Salvar o DataFrame com o mesmo nome do arquivo original
             df.to_csv(os.path.join(output_dir, arquivo), sep=',', index=False, encoding='utf-8')
