@@ -35,19 +35,19 @@ def run(payload):
     tag_a = soup.find('td', class_='botao_opcao').findAll('a')
 
     # Extrair o HREF e o texto da tag 'A'
-    href = tag_a[1].get('href')
+    href = tag_a[0].get('href')
     #
-    texto = tag_a[1].get_text(strip=True)
+    texto = tag_a[0].get_text(strip=True)
 
     print("HREF: ", href)
     print("Texto:", texto)
 
-    download_file(href)
+    #download_file(href)
 
 
 if __name__ == '__main__':
     payload = "{\"data-raw\":\"Linha=Munic%EDpio&Coluna=Grupo_procedimento&Incremento=Quantidade_aprovada&Arquivos=spabr2305.dbf&pesqmes1=Digite+o+texto+e+ache+f%E1cil&SMunic%EDpio=TODAS_AS_CATEGORIAS__&pesqmes2=Digite+o+texto+e+ache+f%E1cil&SCapital=TODAS_AS_CATEGORIAS__&pesqmes3=Digite+o+texto+e+ache+f%E1cil&SRegi%E3o_de_Sa%FAde_%28CIR%29=TODAS_AS_CATEGORIAS__&pesqmes4=Digite+o+texto+e+ache+f%E1cil&SMacrorregi%E3o_de_Sa%FAde=TODAS_AS_CATEGORIAS__&pesqmes5=Digite+o+texto+e+ache+f%E1cil&SMicrorregi%E3o_IBGE=TODAS_AS_CATEGORIAS__&pesqmes6=Digite+o+texto+e+ache+f%E1cil&SRegi%E3o_Metropolitana_-_RIDE=TODAS_AS_CATEGORIAS__&pesqmes7=Digite+o+texto+e+ache+f%E1cil&STerrit%F3rio_da_Cidadania=TODAS_AS_CATEGORIAS__&pesqmes8=Digite+o+texto+e+ache+f%E1cil&SMesorregi%E3o_PNDR=TODAS_AS_CATEGORIAS__&SAmaz%F4nia_Legal=TODAS_AS_CATEGORIAS__&SSemi%E1rido=TODAS_AS_CATEGORIAS__&SFaixa_de_Fronteira=TODAS_AS_CATEGORIAS__&SZona_de_Fronteira=TODAS_AS_CATEGORIAS__&SMunic%EDpio_de_extrema_pobreza=TODAS_AS_CATEGORIAS__&pesqmes14=Digite+o+texto+e+ache+f%E1cil&SProcedimento_Principal=TODAS_AS_CATEGORIAS__&SGrupo_Procedimento_Principal=TODAS_AS_CATEGORIAS__&pesqmes16=Digite+o+texto+e+ache+f%E1cil&SSubgrupo_Proced.Principal=TODAS_AS_CATEGORIAS__&pesqmes17=Digite+o+texto+e+ache+f%E1cil&SForma_organiza%E7%E3o_Principal=TODAS_AS_CATEGORIAS__&pesqmes18=Digite+o+texto+e+ache+f%E1cil&SProcedimento=TODAS_AS_CATEGORIAS__&SGrupo_procedimento=TODAS_AS_CATEGORIAS__&pesqmes20=Digite+o+texto+e+ache+f%E1cil&SSubgrupo_proced.=TODAS_AS_CATEGORIAS__&pesqmes21=Digite+o+texto+e+ache+f%E1cil&SForma_organiza%E7%E3o=TODAS_AS_CATEGORIAS__&SComplexidade=TODAS_AS_CATEGORIAS__&STipo_de_Financiamento=TODAS_AS_CATEGORIAS__&pesqmes24=Digite+o+texto+e+ache+f%E1cil&SSubTipo_de_Financiamento=TODAS_AS_CATEGORIAS__&pesqmes25=Digite+o+texto+e+ache+f%E1cil&SServi%E7o%2FClassifica%E7%E3o=TODAS_AS_CATEGORIAS__&SCBO_do_Profissional=TODAS_AS_CATEGORIAS__&zeradas=exibirlz&formato=table&mostre=Mostra\"}"
-    print(payload)
+    #print(payload)
     run(payload)
     print("Download concluído com sucesso!")
     print("Fechando o programa...")

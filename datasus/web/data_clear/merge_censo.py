@@ -135,7 +135,7 @@ def start(filename: str, data_concat_dir: str, output_dir: str):
         # Lendo arquivo csv
         df_censo = pd.read_csv(filename, sep=';', encoding='latin1')
         # Selecionando colunas necessarias
-        df_censo = df_censo[['CODIGO_MUNICIPIO', 'UF_Nome', 'Regiao_Nome', 'LONGITUDE', 'LATITUDE', 'NU_Populacao']]
+        df_censo = df_censo[['CODIGO_MUNICIPIO', 'UF', 'UF_Nome', 'Regiao_Nome', 'LONGITUDE', 'LATITUDE', 'NU_Populacao']]
         # Renomear colunas para minúsculo
         df_censo.rename(columns=lambda x: x.lower(), inplace=True)
 

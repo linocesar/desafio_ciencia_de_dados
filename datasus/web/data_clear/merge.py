@@ -79,7 +79,7 @@ def merge_grupo_procedimento(grupo: dict, diretorio_input: str, diretorio_merged
                 # Dataframe grupo procedimento valor a ser lido
                 df_valor = pd.read_csv(csv_valor, sep=',', encoding='utf-8')
                 # Dataframe grupo procedimento quantidade valor a ser mesclado
-                df_merged = pd.merge(df_quantidade, df_valor, on=['cod_municipio', 'uf', 'municipio', 'ano', 'mes'],
+                df_merged = pd.merge(df_quantidade, df_valor, on=['cod_municipio', 'municipio', 'ano', 'mes'],
                                      suffixes=('_qtd', '_val'))
                 # Arquivo csv mesclado a ser salvo
                 path_filename = get_path_filename(diretorio_merged, nome_arquivo)
@@ -122,7 +122,7 @@ def merged_subgrupo_procedimento(subgrupo: dict, diretorio_input: str, diretorio
                 # Dataframe subgrupo procedimento valor gerado
                 df_valor = pd.read_csv(csv_valor, sep=',', encoding='utf-8')
                 # Dataframe subgrupo procedimento quantidade valor mesclado
-                df_merged = pd.merge(df_quantidade, df_valor, on=['cod_municipio', 'uf', 'municipio', 'ano', 'mes'],
+                df_merged = pd.merge(df_quantidade, df_valor, on=['cod_municipio', 'municipio', 'ano', 'mes'],
                                      suffixes=('_qtd', '_val'))
                 # Arquivo csv mesclado a ser salvo
                 path_filename = get_path_filename(diretorio_merged, nome_arquivo)
@@ -155,5 +155,5 @@ def start(input_dir, output_dir):
         st.caption(f"Total de arquivos .csv mesclados do subgrupo: {numero_arquivos_subgrupo}")
         st.caption(f"Total de arquivos não mesclados do grupo: {len(grupo) - numero_arquivos_grupo}")
         st.caption(f"Total de arquivos não mesclados do subgrupo: {len(subgrupo) - numero_arquivos_subgrupo}")
-    except Exception:
-        st.caption(f'Não foi possível realizar a concatenação.')
+    except Exception as e:
+        st.caption(f'Não foi possível realizar a concatenação.{e}')

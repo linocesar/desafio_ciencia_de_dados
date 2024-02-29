@@ -32,11 +32,9 @@ data_merged_grupos_subgrupos_dir = create_directory(data_processing_dir, '3_data
 data_concatenation_dir = create_directory(data_processing_dir, '4_data_concatenation')
 data_exploration_dir = create_directory(storage_dir, "3_data_exploration")
 
-
 st.set_page_config(layout="wide", page_title='DATASUS')
 st.title("DATASUS")
 st.write("DADOS DETALHADOS DAS AIH - POR LOCAL INTERNAÇÃO - BRASIL")
-
 
 
 def page_data_extraction():
@@ -58,10 +56,10 @@ def page_data_processing():
 
     st.write("Processamento de dados")
     file_list = [file for file in os.listdir(tabnet_raw_data_dir) if
-                 os.path.isfile(os.path.join(tabnet_raw_data_dir, file)) and file.endswith(".tab")]
-    st.info(f"{len(file_list)} arquivos .tab presentes no diretório {tabnet_raw_data_dir}")
+                 os.path.isfile(os.path.join(tabnet_raw_data_dir, file)) and file.endswith(".csv")]
+    st.info(f"{len(file_list)} arquivos .csv presentes no diretório {tabnet_raw_data_dir}")
 
-    # files = st.file_uploader("Selecione o arquivo .tab", type=['tab'], accept_multiple_files=True,
+    # files = st.file_uploader("Selecione o arquivo ", type=['], accept_multiple_files=True,
     #                          key=st.session_state["file_uploader"], )
     #
     # if files:
@@ -110,7 +108,8 @@ def page_data_processing():
 
     with st.container(border=True):
         st.markdown('''##### Data Merge Censo Demográfico 2022🔗''')
-        file_censo = st.file_uploader("Selecione o arquivo CENSO 2022", type=['csv'], accept_multiple_files=False, key='uploader')
+        file_censo = st.file_uploader("Selecione o arquivo CENSO 2022", type=['csv'], accept_multiple_files=False,
+                                      key='uploader')
         if st.button("Executar", key="bt5"):
             try:
                 if file_censo is not None:
@@ -167,15 +166,13 @@ def bot(my_payload: str, my_filename: str, conta_arquivo: int, total_arquivos: i
 
 
 def format_filename(my_coluna: str, my_conteudo: str, my_periodo: str) -> str:
-    my_filename = f"{my_coluna}_{my_conteudo}_{my_periodo}.tab"
+    my_filename = f"{my_coluna}_{my_conteudo}_{my_periodo}.csv"
     return my_filename
 
 
 def download_file(filename_tabnet: str, my_filename: str, conta_arquivo: int, total_arquivos: int, tabnet_dir):
     diretorio = tabnet_dir
-    # if not os.path.exists(diretorio):
-    #     os.mkdir(diretorio)
-    #     print(f"Diretório {diretorio} criado com sucesso.")
+
     caminho_arquivo = os.path.join(diretorio, my_filename)
 
     url = "http://tabnet.datasus.gov.br" + filename_tabnet
@@ -275,7 +272,7 @@ def run_bot(my_payload, my_filename, conta_arquivo, numero_arquivos, tabnet_dir:
         tag_a = soup.find('td', class_='botao_opcao').findAll('a')
 
         # Extrair o HREF e o texto da tag 'A'
-        filename_tabnet = tag_a[1].get('href')
+        filename_tabnet = tag_a[0].get('href')
 
         result = download_file(filename_tabnet, my_filename, conta_arquivo, numero_arquivos, tabnet_dir)
 
@@ -299,8 +296,6 @@ def create_directory_tree():
 
 
 def start():
-
-
     opcao_selecionada = render_sidebar()
 
     if opcao_selecionada == "Extração de dados":

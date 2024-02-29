@@ -36,7 +36,7 @@ def merge_grupo_subgrupo(grupo: dict, diretorio_input: str, diretorio_merged: st
                 # Dataframe grupo procedimento valor a ser lido
                 df_valor = pd.read_csv(csv_valor, sep=',', encoding='utf-8')
                 # Dataframe grupo procedimento quantidade valor a ser mesclado
-                df_merged = pd.merge(df_quantidade, df_valor, on=['cod_municipio', 'uf', 'municipio', 'ano', 'mes'],
+                df_merged = pd.merge(df_quantidade, df_valor, on=['cod_municipio', 'municipio', 'ano', 'mes'],
                                      suffixes=('_grupo', '_subgrupo'))
                 # Arquivo csv mesclado a ser salvo
                 path_filename = get_path_filename(diretorio_merged, nome_arquivo)
