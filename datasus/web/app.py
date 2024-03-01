@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 import urllib.request as request
 import requests
@@ -19,7 +20,8 @@ from data_clear import merge as merge_data
 from data_clear import concat as concat_data
 from data_clear import merge_groups as merge_groups_data
 from data_clear import merge_censo as merge_censo_data
-from data_clear.utils import create_directory
+from data_clear.utils import create_directory, get_path_filename
+from plot.chart import plot
 
 datasus_dir = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
 storage_dir = create_directory(datasus_dir, "storage")
@@ -32,8 +34,10 @@ data_merged_grupos_subgrupos_dir = create_directory(data_processing_dir, '3_data
 data_concatenation_dir = create_directory(data_processing_dir, '4_data_concatenation')
 data_exploration_dir = create_directory(storage_dir, "3_data_exploration")
 
+# pd.set_option("styler.render.max_elements", 135818880)
+
 st.set_page_config(layout="wide", page_title='DATASUS')
-st.title("DATASUS")
+st.markdown("### DATASUS EXPLORER 💎")
 st.write("DADOS DETALHADOS DAS AIH - POR LOCAL INTERNAÇÃO - BRASIL")
 
 
@@ -54,7 +58,7 @@ def page_data_processing():
     # if "uploaded_files" not in st.session_state:
     #     st.session_state["uploaded_files"] = []
 
-    st.write("Processamento de dados")
+    st.markdown("### Processamento de dados")
     file_list = [file for file in os.listdir(tabnet_raw_data_dir) if
                  os.path.isfile(os.path.join(tabnet_raw_data_dir, file)) and file.endswith(".csv")]
     st.info(f"{len(file_list)} arquivos .csv presentes no diretório {tabnet_raw_data_dir}")
@@ -107,7 +111,7 @@ def page_data_processing():
                 status_concat.update(label="Concatenate Data ✅", expanded=True)
 
     with st.container(border=True):
-        st.markdown('''##### Data Merge Censo Demográfico 2022🔗''')
+        st.markdown('''##### Data Merge Censo Demográfico 2022 🔗''')
         file_censo = st.file_uploader("Selecione o arquivo CENSO 2022", type=['csv'], accept_multiple_files=False,
                                       key='uploader')
         if st.button("Executar", key="bt5"):
@@ -120,7 +124,7 @@ def page_data_processing():
                 else:
                     st.error("Selecione o arquivo CENSO 2022 no formato .csv")
             except Exception as e:
-                st.caption(f"Erro ao executar o processo.")
+                st.caption(f"Erro ao executar o processo. {e}")
 
 
 def uploader_callback():
@@ -131,13 +135,44 @@ def uploader_callback():
 
 def page_data_exploration():
     st.write("Exploração de dados")
+    st.sidebar.title('Opções')
+    options = st.sidebar.radio('Selecione uma opção:',
+                               ['Data Information',
+                                'Data Visualisation', 'Missing Data Visualisation'])
+
+    if options == 'Data Information':
+        page_data_information()
+
+
+@st.cache_data
+def load_data():
+    datasus_csv = get_path_filename(data_exploration_dir, 'datasus.csv')
+    if not os.path.exists(datasus_csv):
+        raise Exception('Arquivo não encontrado')
+    else:
+        df = pd.read_csv(datasus_csv)
+        df = df.apply(lambda x: x.astype('category') if x.dtype == 'object' else x)
+        return df
+
+
+def page_data_information():
+    st.write('Data Information')
+    df = load_data()
+    df_head = df[:100]
+    st.dataframe(df_head.style.format(decimal='.', precision=2),
+                 use_container_width=True,
+                 hide_index=False, width=600,
+                 height=500)
+    st.markdown("### Contagem nulos e não nulos")
+    plot(df)
 
 
 def bot(my_payload: str, my_filename: str, conta_arquivo: int, total_arquivos: int):
     url = "http://tabnet.datasus.gov.br/cgi/tabcgi.exe?sih/cnv/spabr.def"
 
     headers = {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,'
+                  'application/signed-exchange;v=b3;q=0.7',
         'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
         'Cache-Control': 'max-age=0',
         'Connection': 'keep-alive',
@@ -147,7 +182,8 @@ def bot(my_payload: str, my_filename: str, conta_arquivo: int, total_arquivos: i
         'Origin': 'http://tabnet.datasus.gov.br',
         'Referer': 'http://tabnet.datasus.gov.br/cgi/deftohtm.exe?sih/cnv/spabr.def',
         'Upgrade-Insecure-Requests': '1',
-        'User-Agent': 'Mozilla/5.0 X11; Linux x86_64 AppleWebKit/537.36 KHTML: like Gecko Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 X11; Linux x86_64 AppleWebKit/537.36 KHTML: like Gecko Chrome/120.0.0.0 '
+                      'Safari/537.36'
     }
 
     response = requests.request("POST", url, headers=headers, data=my_payload, timeout=15)
