@@ -16,17 +16,12 @@ def plot(df):
 
     df_null_count = df_null_count.rename(columns={'index': 'Procedimento'})
 
-    df_g = df_null_count.groupby(['Nulo', 'Não Nulo']).size().reset_index()
-    df_g = df_g.rename(columns={0: 'total'})
-
-    df_g['percent'] = df_null_count.groupby(['Nulo', 'Não Nulo']).size().groupby(level=0).apply(lambda x: 100 * x / float(x.sum())).values
-
-
-    st.write(df_g.head())
+    # df_g = df_null_count.groupby(['Nulo', 'Não Nulo']).size().reset_index()
+    # df_g = df_g.rename(columns={0: 'total'})
 
     # Generate Plot
-    fig = px.bar(df_g, x="Procedimento", y=['total'],
-                 color_discrete_map={'Não Nulo': 'blue', 'Nulo': 'red'}, text=df_g['percent'])
+    fig = px.bar(df_null_count, x="Procedimento", y=['Não Nulo', 'Nulo'],
+                 color_discrete_map={'Não Nulo': 'blue', 'Nulo': 'red'})
     fig.update_xaxes(categoryorder='total descending')
     fig.update_layout(
         title={'text': "Contagem de nulos e não nulos",
