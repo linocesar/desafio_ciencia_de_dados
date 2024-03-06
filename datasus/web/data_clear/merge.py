@@ -1,8 +1,7 @@
-import os
 import re
 import pandas as pd
 
-from data_clear.utils import get_arquivos_formato, create_directory, get_path_filename
+from data_clear.utils import get_arquivos_formato, get_path_filename
 
 import streamlit as st
 import time
@@ -32,11 +31,10 @@ def get_agrupagem(padrao: str, periodos: list, arquivos: list) -> dict:
     :return: Dicionario com as chaves e valores
     :rtype: dict
     """
-    # Dicionario: periodo (mes, ano) e lista de arquivos .csv.
-    # Exemplo:
-    # {
-    #     'jan_2020': ['grupo_procedimento_quantidade_aprovado_jan_2020.csv', 'grupo_procedimento_valor_aprovado_jan_2020.csv'],
-    #     'fev_2020': ['grupo_procedimento_quantidade_aprovado_fev_2020.csv', 'grupo_procedimento_valor_aprovado_fev_2020.csv'],
+    # Dicionario: periodo (mes, ano) e lista de arquivos .csv. Exemplo: { 'jan_2020': [
+    # 'grupo_procedimento_quantidade_aprovado_jan_2020.csv', 'grupo_procedimento_valor_aprovado_jan_2020.csv'],
+    # 'fev_2020': ['grupo_procedimento_quantidade_aprovado_fev_2020.csv',
+    # 'grupo_procedimento_valor_aprovado_fev_2020.csv'],
     grupo = {}
     for periodo in periodos:
         for arquivo in arquivos:
@@ -71,7 +69,7 @@ def merge_grupo_procedimento(grupo: dict, diretorio_input: str, diretorio_merged
                 # Ordena os arquivos .csv por ordem alfabetica
                 grupo[mes_ano] = sorted(grupo[mes_ano])
                 # Arquivo csv grupo procedimento quantidade a ser lido
-                csv_quantidade = get_path_filename(diretorio_input, grupo[mes_ano][0]) # os.path.join(diretorio_output, grupo[mes_ano][0])
+                csv_quantidade = get_path_filename(diretorio_input, grupo[mes_ano][0])
                 # Arquivo csv grupo procedimento valor a ser lido
                 csv_valor = get_path_filename(diretorio_input, grupo[mes_ano][1])
                 # Dataframe grupo procedimento quantidade a ser lido
