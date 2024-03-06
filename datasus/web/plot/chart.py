@@ -1,7 +1,8 @@
 import streamlit as st
 import plotly.express as px
 import pandas as pd
-from procedimento import item_procedimentos
+
+from procedimento import item_procedimentos_regex, procedimentos
 
 
 # @st.cache_data
@@ -36,33 +37,62 @@ def plot_nulos(df):
 
 
 def get_procedimento(item):
-    return item_procedimentos[item]
+    return item_procedimentos_regex[item]
+
+
+def get_tipo_procedimento(item):
+    return procedimentos[item]
 
 
 @st.cache_data
 def plot_area_chart(df_datasus, procedimento):
     item_selecionado = get_procedimento(procedimento)
 
-    df_datasus_qtd = df_datasus.filter(regex='_qtd', axis=1)
-    colum_qtd = df_datasus_qtd.columns
-    df_datasus_agrupado_ano_regiao = (df_datasus.groupby(['ano', 'regiao_nome'], observed=True).
-                                      agg(
+    df_datasus_agrupado_ano_regiao = (df_datasus.groupby(['ano', 'regiao_nome'], observed=True).agg(
         {coluna: lambda x: x.sum() for coluna in df_datasus.columns if '_qtd' in coluna}).reset_index())
 
     df_datasus_agrupado_ano_regiao.set_index('ano', inplace=True)
 
-    fig = px.area(df_datasus_agrupado_ano_regiao.filter(regex=item_selecionado), facet_col_wrap=1,
-                  color='variable', height=1000, facet_col="regiao_nome")
-    fig.add_vrect(x0=2022, x1=2023, col=1, annotation_text="Aumento", annotation_position="top left",
-                  fillcolor="green", opacity=0.15, line_width=0)
-    fig.add_vrect(x0=2019, x1=2022, col=1, annotation_text="pandemia", annotation_position="top left",
-                  fillcolor="black", opacity=0.15, line_width=0)
+    fig = px.area(df_datasus_agrupado_ano_regiao.filter(regex=item_selecionado),
+                  facet_col_wrap=1,
+                  color='variable',
+                  height=1000,
+                  facet_col="regiao_nome")
 
-    fig.update_yaxes(title_text='<b>Quantidade')
-    # fig.update_xaxes(rangeslider_visible=False)
-    fig.update_layout(template='plotly_white', title='Número de procedimentos por região entre 2008 a 2023', xaxis=dict(
-        tickmode='linear',
-        tick0=2008,
-        dtick=1
-    ))
+    fig.update_yaxes(title_text='Quantidade')
+
+    fig.update_layout(template='plotly_white',
+                      title='Número de procedimentos por região entre 2008 a 2023', xaxis=dict(tickmode='linear',
+                                                                                               tick0=2008,
+                                                                                               dtick=1
+                                                                                               )
+                      )
     st.plotly_chart(fig, use_container_width=True)
+
+
+def plot_chart_unica_variavel_por_regiao(df_datasus, tipo_procedimento):
+    item = get_tipo_procedimento(tipo_procedimento)
+
+    df_datasus_agrupado_ano_regiao = (df_datasus.groupby(['ano', 'regiao_nome'], observed=True).agg(
+        {coluna: lambda x: x.sum() for coluna in df_datasus.columns if
+         '_qtd' in coluna or '_val' in coluna}).reset_index())
+
+    df_datasus_agrupado_ano_regiao.set_index('ano', inplace=True)
+
+    df_variable_regiao = df_datasus_agrupado_ano_regiao.filter(regex='regiao_nome$|_qtd$|_val$').loc[0:,
+                         ['regiao_nome', item]]
+
+    df_variable_regiao.sort_values(by=item, ascending=True, inplace=True)
+
+    fig2 = px.bar(df_variable_regiao,
+                  x=df_variable_regiao.index,
+                  y=df_variable_regiao[item],
+                  color='regiao_nome')
+
+    fig2.update_layout(template='plotly_white', title='Número de procedimentos por região entre 2008 a 2023',
+                       xaxis=dict(
+                           tickmode='linear',
+                           tick0=2008,
+                           dtick=1
+                       ))
+    st.plotly_chart(fig2, use_container_width=True)

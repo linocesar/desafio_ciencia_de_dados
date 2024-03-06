@@ -11,11 +11,11 @@ from periodos import render_periodos
 from coluna import render_coluna
 from conteudo import render_conteudo
 from sidebar import render_sidebar
-from procedimento import render_selectbox
+from procedimento import render_selectbox, render_selecbox_procedimentos
 import coluna as item_colunas
 import conteudo as item_conteudos
 import periodos as item_periodos
-import procedimento as item_procedimento
+
 from markdown import get_markdown_text_data_clean, get_markdown_text_data_merge, get_markdown_text_data_merge_grupo
 from data_clear import sanitizer as data_clean
 from data_clear import merge as merge_data
@@ -23,7 +23,7 @@ from data_clear import concat as concat_data
 from data_clear import merge_groups as merge_groups_data
 from data_clear import merge_censo as merge_censo_data
 from data_clear.utils import create_directory, get_path_filename
-from plot.chart import plot_nulos, plot_area_chart
+from plot.chart import plot_nulos, plot_area_chart, plot_chart_unica_variavel_por_regiao
 
 datasus_dir = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
 storage_dir = create_directory(datasus_dir, "storage")
@@ -173,6 +173,8 @@ def page_data_information():
     item = render_selectbox()
     plot_area_chart(df, item)
 
+    procedimento = render_selecbox_procedimentos()
+    plot_chart_unica_variavel_por_regiao(df, procedimento)
 
 
 def bot(my_payload: str, my_filename: str, conta_arquivo: int, total_arquivos: int):
