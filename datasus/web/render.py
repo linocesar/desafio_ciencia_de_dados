@@ -58,3 +58,8 @@ def generator_seleted_box_procedimentos(titulo: str, itens: dict):
 def generator_seleted_box_todos_os_procedimentos(titulo: str, itens: dict):
     opcao = st.selectbox(f"Selecione {titulo}", list(itens.keys()), placeholder="Selecione um item", key='procedimento_todos')
     return opcao
+
+
+def generator_seleted_box_ano(titulo: str, itens: list):
+    opcao = st.selectbox(f"Selecione {titulo}", itens, placeholder="Selecione um ano", key='ano')
+    return opcao

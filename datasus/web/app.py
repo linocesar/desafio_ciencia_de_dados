@@ -12,6 +12,7 @@ from coluna import render_coluna
 from conteudo import render_conteudo
 from sidebar import render_sidebar
 from procedimento import render_selectbox, render_selecbox_procedimentos
+from ano import render_selectbox_ano
 import coluna as item_colunas
 import conteudo as item_conteudos
 import periodos as item_periodos
@@ -23,7 +24,7 @@ from data_clear import concat as concat_data
 from data_clear import merge_groups as merge_groups_data
 from data_clear import merge_censo as merge_censo_data
 from data_clear.utils import create_directory, get_path_filename
-from plot.chart import plot_nulos, plot_area_chart, plot_chart_unica_variavel_por_regiao
+from plot.chart import plot_nulos, plot_area_chart, plot_chart_unica_variavel_por_regiao, plot_mapa_with_folium
 
 datasus_dir = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
 storage_dir = create_directory(datasus_dir, "storage")
@@ -135,6 +136,37 @@ def uploader_callback():
         print('Uploaded file #%d' % st.session_state['ctr'])
 
 
+@st.cache_data
+def load_data_for_map():
+    df_datasus = load_data()
+    padrao_cirurgia_qtd = (r'municipio$|uf$|regiao_nome$|mes$|ano$|latitude$|longitude$|nu_populacao$|^cirurgia_'
+                           r'.*_qtd$|cirurgia.*_qtd$|bucomaxilofacial_qtd$')
+    df_datasus_cirurgias = df_datasus.filter(regex=padrao_cirurgia_qtd, axis=1)
+    df_datasus_cirurgias_agrupado = (
+        df_datasus_cirurgias.groupby(
+            ['ano',
+             'municipio',
+             'uf',
+             'latitude',
+             'longitude'],
+            observed=True).
+        agg(
+            {coluna: lambda x: x.sum() for coluna in df_datasus_cirurgias.columns[9:]}).reset_index())
+    df_datasus_cirurgias_agrupado['total_ano'] = (
+        df_datasus_cirurgias_agrupado[df_datasus_cirurgias_agrupado.columns[5:]]
+        .agg(['sum'],
+             axis=1))
+    return df_datasus_cirurgias_agrupado
+
+
+def page_data_visualisation():
+    st.markdown("#### Mapa de Cirúrgias no Brasil entre 2008 e 2023.")
+    df_datasus_cirurgias_agrupado = load_data_for_map()
+
+    ano = render_selectbox_ano()
+    plot_mapa_with_folium(df_datasus_cirurgias_agrupado, ano)
+
+
 def page_data_exploration():
     st.write("Exploração de dados")
     st.sidebar.title('Opções')
@@ -144,6 +176,8 @@ def page_data_exploration():
 
     if options == 'Data Information':
         page_data_information()
+    elif options == 'Data Visualisation':
+        page_data_visualisation()
 
 
 @st.cache_data
