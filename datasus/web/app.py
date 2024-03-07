@@ -17,7 +17,12 @@ import coluna as item_colunas
 import conteudo as item_conteudos
 import periodos as item_periodos
 
-from markdown import get_markdown_text_data_clean, get_markdown_text_data_merge, get_markdown_text_data_merge_grupo
+from markdown import (get_markdown_text_data_clean,
+                      get_markdown_text_data_merge,
+                      get_markdown_text_data_merge_grupo,
+                      get_makdown_text_data_concatenate,
+                      get_markdown_data_merge_censo
+                      )
 from data_clear import sanitizer as data_clean
 from data_clear import merge as merge_data
 from data_clear import concat as concat_data
@@ -107,6 +112,7 @@ def page_data_processing():
 
     with st.container(border=True):
         st.markdown('''##### Data Concatenate ➕''')
+        get_makdown_text_data_concatenate()
         if st.button("Executar", key="bt4"):
             with st.status("concatenating data...", expanded=True) as status_concat:
                 st.caption("Carregando dados...")
@@ -115,6 +121,7 @@ def page_data_processing():
 
     with st.container(border=True):
         st.markdown('''##### Data Merge Censo Demográfico 2022 🔗''')
+        get_markdown_data_merge_censo()
         file_censo = st.file_uploader("Selecione o arquivo CENSO 2022", type=['csv'], accept_multiple_files=False,
                                       key='uploader')
         if st.button("Executar", key="bt5"):
@@ -167,17 +174,32 @@ def page_data_visualisation():
     plot_mapa_with_folium(df_datasus_cirurgias_agrupado, ano)
 
 
+def page_missing_data_visualisation():
+    df = load_data()
+    df_head = df[:100]
+    st.dataframe(df_head.style.format(decimal='.', precision=2),
+                 use_container_width=True,
+                 hide_index=False, width=600,
+                 height=500)
+    st.markdown("### Contagem nulos e não nulos")
+    plot_nulos(df)
+
+
 def page_data_exploration():
     st.write("Exploração de dados")
     st.sidebar.title('Opções')
     options = st.sidebar.radio('Selecione uma opção:',
-                               ['Data Information',
-                                'Data Visualisation', 'Missing Data Visualisation'])
+                               ['Missing Data Visualisation',
+                                'Data Information',
+                                'Mapa Visualisation',
+                                ])
 
     if options == 'Data Information':
         page_data_information()
-    elif options == 'Data Visualisation':
+    if options == 'Mapa Visualisation':
         page_data_visualisation()
+    if options == 'Missing Data Visualisation':
+        page_missing_data_visualisation()
 
 
 @st.cache_data
@@ -192,17 +214,10 @@ def load_data():
 
 
 def page_data_information():
-    st.write('Data Information')
+    st.write('Dados Históricos Por Grupos de Procedimentos ou por Procedimento')
     df = load_data()
-    df_head = df[:100]
-    st.dataframe(df_head.style.format(decimal='.', precision=2),
-                 use_container_width=True,
-                 hide_index=False, width=600,
-                 height=500)
-    st.markdown("### Contagem nulos e não nulos")
-    plot_nulos(df)
 
-    st.markdown("### Distribuição dos dados")
+    st.markdown("### Distribuição de Procedimentos ao longo do tempo")
 
     item = render_selectbox()
     plot_area_chart(df, item)
