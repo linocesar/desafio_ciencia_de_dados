@@ -65,9 +65,6 @@ def get_markdown_text_data_merge_grupo():
 - **`get_arquivos_agrupados_por_periodo(arquivos_csv, periodos)`**:
    - Esta função recebe uma lista de nomes de arquivos CSV e uma lista de períodos (mes, ano) como entrada e retorna um dicionário onde as chaves são os períodos e os valores são listas de arquivos CSV correspondentes a cada período.
 
-- **`merge_grupo_subgrupo(grupo: dict, diretorio_input: str, diretorio_merged: str) -> int`**:
-   - Esta função mescla conjuntos de dados de grupos e subgrupos de procedimentos para um mesmo período (mes, ano). Ela lê os arquivos CSV correspondentes aos grupos e subgrupos, mescla-os com base em colunas-chave específicas e salva o arquivo mesclado no diretório de saída. Retorna o número total de conjuntos de dados mesclados.
-
 - **`start(input_dir, output_dir)`**:
    - Esta é a função principal. Ela recebe os diretórios de entrada e saída como entrada.
    - Primeiro, obtém uma lista de todos os arquivos CSV no diretório de entrada e os períodos correspondentes a partir desses arquivos.
