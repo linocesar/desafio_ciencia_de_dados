@@ -177,6 +177,18 @@ def page_data_visualisation():
 def page_missing_data_visualisation():
     df = load_data()
     df_head = df[:100]
+    memory_used = df.memory_usage(deep=True).sum() / (1024 ** 3)
+    df_colunas_nulos = df.isnull().sum().reset_index().rename(columns={'index': 'coluna', 0: 'total_nulos'})
+    numero_colunas_nulos = len(df_colunas_nulos.query('total_nulos > 0'))
+    numero_linhas, numero_colunas = df.shape
+
+    col1, col2 = st.columns(2)
+
+    col1.metric(label="Número de linhas", value=numero_linhas)
+    col1.metric(label="Número de colunas", value=numero_colunas)
+    col1.metric(label="Número de colunas com nulos", value=numero_colunas_nulos)
+    col2.metric(label="Memória usada (GB)", value=f'{memory_used:.2f}')
+
     st.dataframe(df_head.style.format(decimal='.', precision=2),
                  use_container_width=True,
                  hide_index=False, width=600,
@@ -185,20 +197,24 @@ def page_missing_data_visualisation():
     plot_nulos(df)
 
 
+def get_metrics_file():
+    pass
+
+
 def page_data_exploration():
-    st.write("Exploração de dados")
+    # st.write("Exploração de dados")
     st.sidebar.title('Opções')
     options = st.sidebar.radio('Selecione uma opção:',
-                               ['Missing Data Visualisation',
+                               ['Missing Data Visualization',
                                 'Data Information',
-                                'Mapa Visualisation',
+                                'Map Visualization',
                                 ])
 
     if options == 'Data Information':
         page_data_information()
-    if options == 'Mapa Visualisation':
+    if options == 'Map Visualization':
         page_data_visualisation()
-    if options == 'Missing Data Visualisation':
+    if options == 'Missing Data Visualization':
         page_missing_data_visualisation()
 
 
@@ -272,7 +288,8 @@ def download_file(filename_tabnet: str, my_filename: str, conta_arquivo: int, to
 
     url = "http://tabnet.datasus.gov.br" + filename_tabnet
     headers = {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,'
+                  'application/signed-exchange;v=b3;q=0.7',
         'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
         'Connection': 'keep-alive',
         # 'Cookie': 'TS014879da=01e046ca4ce6c7798b4ea0cc135f51846c393958a053b1e1ede05d76e32700406eb7c5c8f7fada65ddaf62cd3d2933fbe9ce45558d'
@@ -314,7 +331,27 @@ def busca_chaves(itens: dict, valor_item: str) -> str:
 
 
 def get_payload(my_coluna: str, my_conteudo: str, my_periodo: str):
-    valor = f"Linha=Munic%EDpio&Coluna={my_coluna}&Incremento={my_conteudo}&Arquivos={my_periodo}&pesqmes1=Digite+o+texto+e+ache+f%E1cil&SMunic%EDpio=TODAS_AS_CATEGORIAS__&pesqmes2=Digite+o+texto+e+ache+f%E1cil&SCapital=TODAS_AS_CATEGORIAS__&pesqmes3=Digite+o+texto+e+ache+f%E1cil&SRegi%E3o_de_Sa%FAde_%28CIR%29=TODAS_AS_CATEGORIAS__&pesqmes4=Digite+o+texto+e+ache+f%E1cil&SMacrorregi%E3o_de_Sa%FAde=TODAS_AS_CATEGORIAS__&pesqmes5=Digite+o+texto+e+ache+f%E1cil&SMicrorregi%E3o_IBGE=TODAS_AS_CATEGORIAS__&pesqmes6=Digite+o+texto+e+ache+f%E1cil&SRegi%E3o_Metropolitana_-_RIDE=TODAS_AS_CATEGORIAS__&pesqmes7=Digite+o+texto+e+ache+f%E1cil&STerrit%F3rio_da_Cidadania=TODAS_AS_CATEGORIAS__&pesqmes8=Digite+o+texto+e+ache+f%E1cil&SMesorregi%E3o_PNDR=TODAS_AS_CATEGORIAS__&SAmaz%F4nia_Legal=TODAS_AS_CATEGORIAS__&SSemi%E1rido=TODAS_AS_CATEGORIAS__&SFaixa_de_Fronteira=TODAS_AS_CATEGORIAS__&SZona_de_Fronteira=TODAS_AS_CATEGORIAS__&SMunic%EDpio_de_extrema_pobreza=TODAS_AS_CATEGORIAS__&pesqmes14=Digite+o+texto+e+ache+f%E1cil&SProcedimento_Principal=TODAS_AS_CATEGORIAS__&SGrupo_Procedimento_Principal=TODAS_AS_CATEGORIAS__&pesqmes16=Digite+o+texto+e+ache+f%E1cil&SSubgrupo_Proced.Principal=TODAS_AS_CATEGORIAS__&pesqmes17=Digite+o+texto+e+ache+f%E1cil&SForma_organiza%E7%E3o_Principal=TODAS_AS_CATEGORIAS__&pesqmes18=Digite+o+texto+e+ache+f%E1cil&SProcedimento=TODAS_AS_CATEGORIAS__&SGrupo_procedimento=TODAS_AS_CATEGORIAS__&pesqmes20=Digite+o+texto+e+ache+f%E1cil&SSubgrupo_proced.=TODAS_AS_CATEGORIAS__&pesqmes21=Digite+o+texto+e+ache+f%E1cil&SForma_organiza%E7%E3o=TODAS_AS_CATEGORIAS__&SComplexidade=TODAS_AS_CATEGORIAS__&STipo_de_Financiamento=TODAS_AS_CATEGORIAS__&pesqmes24=Digite+o+texto+e+ache+f%E1cil&SSubTipo_de_Financiamento=TODAS_AS_CATEGORIAS__&pesqmes25=Digite+o+texto+e+ache+f%E1cil&SServi%E7o%2FClassifica%E7%E3o=TODAS_AS_CATEGORIAS__&SCBO_do_Profissional=TODAS_AS_CATEGORIAS__&zeradas=exibirlz&formato=table&mostre=Mostra"
+    valor = (f"Linha=Munic%EDpio&Coluna={my_coluna}&Incremento={my_conteudo}&Arquivos={my_periodo}&pesqmes1=Digite+o"
+             f"+texto+e+ache+f%E1cil&SMunic%EDpio=TODAS_AS_CATEGORIAS__&pesqmes2=Digite+o+texto+e+ache+f%E1cil"
+             f"&SCapital=TODAS_AS_CATEGORIAS__&pesqmes3=Digite+o+texto+e+ache+f%E1cil&SRegi%E3o_de_Sa%FAde_%28CIR%29"
+             f"=TODAS_AS_CATEGORIAS__&pesqmes4=Digite+o+texto+e+ache+f%E1cil&SMacrorregi%E3o_de_Sa%FAde"
+             f"=TODAS_AS_CATEGORIAS__&pesqmes5=Digite+o+texto+e+ache+f%E1cil&SMicrorregi%E3o_IBGE"
+             f"=TODAS_AS_CATEGORIAS__&pesqmes6=Digite+o+texto+e+ache+f%E1cil&SRegi%E3o_Metropolitana_-_RIDE"
+             f"=TODAS_AS_CATEGORIAS__&pesqmes7=Digite+o+texto+e+ache+f%E1cil&STerrit%F3rio_da_Cidadania"
+             f"=TODAS_AS_CATEGORIAS__&pesqmes8=Digite+o+texto+e+ache+f%E1cil&SMesorregi%E3o_PNDR"
+             f"=TODAS_AS_CATEGORIAS__&SAmaz%F4nia_Legal=TODAS_AS_CATEGORIAS__&SSemi%E1rido=TODAS_AS_CATEGORIAS__"
+             f"&SFaixa_de_Fronteira=TODAS_AS_CATEGORIAS__&SZona_de_Fronteira=TODAS_AS_CATEGORIAS__&SMunic"
+             f"%EDpio_de_extrema_pobreza=TODAS_AS_CATEGORIAS__&pesqmes14=Digite+o+texto+e+ache+f%E1cil"
+             f"&SProcedimento_Principal=TODAS_AS_CATEGORIAS__&SGrupo_Procedimento_Principal=TODAS_AS_CATEGORIAS__"
+             f"&pesqmes16=Digite+o+texto+e+ache+f%E1cil&SSubgrupo_Proced.Principal=TODAS_AS_CATEGORIAS__&pesqmes17"
+             f"=Digite+o+texto+e+ache+f%E1cil&SForma_organiza%E7%E3o_Principal=TODAS_AS_CATEGORIAS__&pesqmes18=Digite"
+             f"+o+texto+e+ache+f%E1cil&SProcedimento=TODAS_AS_CATEGORIAS__&SGrupo_procedimento=TODAS_AS_CATEGORIAS__"
+             f"&pesqmes20=Digite+o+texto+e+ache+f%E1cil&SSubgrupo_proced.=TODAS_AS_CATEGORIAS__&pesqmes21=Digite+o"
+             f"+texto+e+ache+f%E1cil&SForma_organiza%E7%E3o=TODAS_AS_CATEGORIAS__&SComplexidade=TODAS_AS_CATEGORIAS__"
+             f"&STipo_de_Financiamento=TODAS_AS_CATEGORIAS__&pesqmes24=Digite+o+texto+e+ache+f%E1cil"
+             f"&SSubTipo_de_Financiamento=TODAS_AS_CATEGORIAS__&pesqmes25=Digite+o+texto+e+ache+f%E1cil&SServi%E7o"
+             f"%2FClassifica%E7%E3o=TODAS_AS_CATEGORIAS__&SCBO_do_Profissional=TODAS_AS_CATEGORIAS__&zeradas=exibirlz"
+             f"&formato=table&mostre=Mostra")
     payloader = {"data-raw": valor}
     saida_formatada = "{" + ', '.join([f'"{k}": "{v}"' for k, v in payloader.items()]) + "}"
     return saida_formatada
@@ -345,7 +382,8 @@ def run_bot(my_payload, my_filename, conta_arquivo, numero_arquivos, tabnet_dir:
     url = "http://tabnet.datasus.gov.br/cgi/tabcgi.exe?sih/cnv/spabr.def"
 
     headers = {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,'
+                  'application/signed-exchange;v=b3;q=0.7',
         'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
         'Cache-Control': 'max-age=0',
         'Connection': 'keep-alive',
@@ -355,7 +393,8 @@ def run_bot(my_payload, my_filename, conta_arquivo, numero_arquivos, tabnet_dir:
         'Origin': 'http://tabnet.datasus.gov.br',
         'Referer': 'http://tabnet.datasus.gov.br/cgi/deftohtm.exe?sih/cnv/spabr.def',
         'Upgrade-Insecure-Requests': '1',
-        'User-Agent': 'Mozilla/5.0 X11; Linux x86_64 AppleWebKit/537.36 KHTML: like Gecko Chrome/120.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 X11; Linux x86_64 AppleWebKit/537.36 KHTML: like Gecko Chrome/120.0.0.0 '
+                      'Safari/537.36'
     }
     try:
         time = 15
